@@ -1,0 +1,4 @@
+Flask
+Flask-Classy==0.6.10
+gspread
+oauth2client
