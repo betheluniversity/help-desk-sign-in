@@ -3,7 +3,6 @@ from flask_classy import FlaskView, route
 
 
 class TestView(FlaskView):
-    # Method that initially renders the index.html class
     @route('/')
-    def index(self):
+    def base(self):
         return 'Test'
