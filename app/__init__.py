@@ -1,7 +1,7 @@
 from flask import Flask
-from app.views import View
+from app.full_time_staff import ShiftView
 
 app = Flask(__name__)
 app.config.from_object('config')
 
-View.register(app, route_base='/')
+ShiftView.register(app, route_base='/')

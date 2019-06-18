@@ -75,11 +75,20 @@ def convert12(str1):
 
 
 # method resets the flagged_items sheet upon each new running of the program
-def reset_sheet():
+def reset_flagged():
     cell_reset = flagged_items.range(2, 1, len(fi)+1, 8)
     for cell in cell_reset:
         cell.value = ''
     flagged_items.update_cells(cell_reset)
+    return
+
+
+# method resets the python_input sheet upon the clicking of the web-page button
+def reset_py_data():
+    cell_reset = python.range(2, 1, len(py_input)+1, 4)
+    for cell in cell_reset:
+        cell.value = ''
+    python.update_cells(cell_reset)
     return
 
 
@@ -162,7 +171,7 @@ p = 0
 # tracks the current part of the extra shift(s)
 shift_count = -1
 
-reset_sheet()
+reset_flagged()
 
 # loops through all information in the hd_export and py_input lists of dictionaries of shift info
 for n in range(0, len(hd_export)):
