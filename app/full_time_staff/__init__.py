@@ -11,3 +11,8 @@ class FullTimeStaffView(FlaskView):
     @route('/')
     def index(self):
         return render_template('full_time_staff/index.html', **locals())
+
+    # Test method for how the spreadsheet.py file can be run in the future
+    @route('generate_shifts')
+    def generate_shifts(self):
+        return render_template('full_time_staff/generate_shifts.html', **locals())

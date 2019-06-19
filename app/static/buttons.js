@@ -1,7 +1,9 @@
+// Not currently working
+
 $(document).ready(function() {
-    $("#generate-flagged").click(function() {
+    $("#generate-shifts").click(function() {
        let input_data = {'clicked': 'true'};
-       $.post('/button_clicked', input_data, function(output_data) {
+       $.post('/generate_shifts', input_data, function(output_data) {
             alert('CLICKED');
        });
     });

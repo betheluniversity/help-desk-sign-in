@@ -12,7 +12,7 @@ a.nav-link.button.nav-bar-active {
 }
 
 a.nav-link:hover{
-    color: #FFC600 !important;
+    text-decoration:underline !important;
 }
 
 a.disabled:hover {
@@ -33,24 +33,20 @@ body {
     cursor: auto;
 }
 
-html, body {
-    background-color: #fafafa;
+div.centered {
+    text-align:center;
 }
 
-li.list-group-item{
-    background-color: #fafafa;
+div.dashboard-card{
+    background-color: #f2f2f2;
+    border-color: #d8d8d8;
+    margin-top: 10px;
 }
 
-nav a {
-    color: gray;
-}
-
-nav.navbar{
-    padding: 0 10px;
-}
-
-span.lab-title{
-    color: #ffc600
+div.dashboard-info{
+    background-color: #f2f2f2;
+    border-color: #d8d8d8;
+    margin-top: 10px;
 }
 
 html, body {
