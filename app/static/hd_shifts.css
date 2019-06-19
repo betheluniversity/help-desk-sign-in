@@ -1,5 +1,26 @@
+a.dashboard-link{
+    color: black;
+    text-decoration: none;
+}
+
+a.nav-link.button {
+    color: #fff !important;
+}
+
+a.nav-link.button.nav-bar-active {
+    color: #FFC600 !important;
+}
+
+a.nav-link:hover{
+    color: #FFC600 !important;
+}
+
+a.disabled:hover {
+    color: black !important;
+}
+
 body {
-    background: #fff;
+    background: #ffffff;
     color: #222;
     padding: 0;
     margin: 0;
@@ -10,4 +31,85 @@ body {
     line-height: 1.5;
     position: relative;
     cursor: auto;
+}
+
+html, body {
+    background-color: #fafafa;
+}
+
+li.list-group-item{
+    background-color: #fafafa;
+}
+
+nav a {
+    color: gray;
+}
+
+nav.navbar{
+    padding: 0 10px;
+}
+
+span.lab-title{
+    color: #ffc600
+}
+
+html, body {
+    background-color: #fafafa;
+}
+
+li.list-group-item{
+    background-color: #fafafa;
+}
+
+nav a {
+    color: gray;
+}
+
+nav.navbar{
+    padding: 0 10px;
+}
+
+span.lab-title{
+    color: #ffc600
+}
+
+ul.list-group{
+    margin-top: 10px;
+}
+
+.active {
+    max-height: 30px;
+    background-color: #0F2C52;
+    color: white !important;
+    border-radius: 6px;
+    padding: 3px 16px
+}
+
+.background-blue {
+    background-color: #123563;
+}
+
+.nav.margins {
+    padding: 0 2em;
+}
+
+.margins {
+    width: 100%;
+    margin: 20px auto;
+    max-width: 70rem;
+}
+
+.navbar {
+    padding: 1em 2em !important;
+}
+
+a.nav-link:focus, a.nav-link:hover.active {
+    text-decoration: none !important;
+    color: white !important;
+}
+
+.wc-margins {
+    width: 100%;
+    margin: 20px auto;
+    max-width: 95%;
 }
