@@ -109,3 +109,9 @@ a.nav-link:focus, a.nav-link:hover.active {
     margin: 20px auto;
     max-width: 95%;
 }
+
+#sign-in-button, #sign-out-button, #show-shifts {
+    background-color: #005eb2;
+    border: 1px solid #0053b2;
+    color: #fff;
+}

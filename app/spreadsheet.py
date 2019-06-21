@@ -106,7 +106,6 @@ def flagged_cells(hd_row, py_row, flag_num, skipped):
     else:  # if false, time in and out values are printed to flagged_items as is
         cell_list[5].value = convert12(py_input[py_row]['In'])
         cell_list[6].value = convert12(py_input[py_row]['Out'])
-    cell_list[7].value = 'FLAGGED'
     flagged_items.update_cells(cell_list)
     return
 
