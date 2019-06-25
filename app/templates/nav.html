@@ -7,10 +7,10 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a id="student employees" class="nav-link button {{ 'nav-bar-active' if 'StudentEmployeesView' in request.url_rule.endpoint }}" href="{{ url_for('StudentEmployeesView:index') }}">Student Employees</a>
+                <a id="student employees" class="nav-link button {{ 'nav-bar-active' if 'ShiftsView:student_employees_index' in request.url_rule.endpoint }}" href="{{ url_for('ShiftsView:student_employees_index') }}">Student Employees</a>
             </li>
             <li class="nav-item">
-                <a id="full time staff" class="nav-link button {{ 'nav-bar-active' if 'FullTimeStaffView' in request.url_rule.endpoint }}" href="{{ url_for('FullTimeStaffView:index') }}">Full-Time Staff</a>
+                <a id="full time staff" class="nav-link button {{ 'nav-bar-active' if 'ShiftsView:full_time_staff_index' in request.url_rule.endpoint }}" href="{{ url_for('ShiftsView:full_time_staff_index') }}">Full-Time Staff</a>
             </li>
         </ul>
     </div>

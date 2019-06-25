@@ -24,7 +24,9 @@
     <body>
         {% block scripts %}
             <!-- jQuery library -->
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+            <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+                integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+                crossorigin="anonymous"></script>
 
             <!-- Latest compiled Javascript -->
             <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -37,7 +39,7 @@
         <div class="wc-margins">{% block body_content %}{% endblock %}</div>
 
         <!-- Help Desk Time Clock JS -->
-        <script type="text/javascript" src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='shift_buttons.js') }}"></script>
     </body>
 {% endblock %}
 
