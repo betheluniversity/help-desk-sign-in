@@ -1,45 +1,39 @@
-# installed python packages
+# Global
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# local
+# Packages
 import datetime
-from app import app
 from datetime import datetime
 from datetime import timedelta
 from functools import cmp_to_key
 from operator import itemgetter as i
 
+# Local
+from app import app
+
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['INSTALL_LOCATION'], scope)
 client = gspread.authorize(credentials)
 
-# initializing sheet objects and lists for reading and writing from Google Sheets
-# variables with '.get_all.records()' are lists of dictionaries from their respective sheets
-flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
-fi = flagged_items.get_all_records()
-# accesses info from python_input, which takes in clock in/out info from RFID scanner
-python = client.open('help_desk_sign_in').worksheet('python_input')
-# a list of dicts of info gathered from python_input sheet
-scanner_shifts = python.get_all_records()
-# accesses info from hd_export, where the manager posts his expected shift schedule
-export = client.open('help_desk_sign_in').worksheet('hd_export')
-# a list of dicts of info gathered from hd_export sheet
-help_desk = export.get_all_records()
-
-
 class SheetsController:
     def __init__(self):
-        self.scope = scope
-        self.credentials = credentials
-        self.client = client
+        # self.scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        # self.credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['INSTALL_LOCATION'], self.scope)
+        # self.client = gspread.authorize(self.credentials)
 
-        self.flagged_items = flagged_items
-        self.fi = fi
-        self.python = python
-        self.scanner_shifts = scanner_shifts
-        self.export = export
-        self.help_desk = help_desk
+        # initializing sheet objects and lists for reading and writing from Google Sheets
+        # variables with '.get_all.records()' are lists of dictionaries from their respective sheets
+        self.flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
+        self.fi = self.flagged_items.get_all_records()
+        # accesses info from python_input, which takes in clock in/out info from RFID scanner
+        self.python = client.open('help_desk_sign_in').worksheet('python_input')
+        # a list of dicts of info gathered from python_input sheet
+        self.scanner_shifts = self.python.get_all_records()
+        # accesses info from hd_export, where the manager posts his expected shift schedule
+        self.export = client.open('help_desk_sign_in').worksheet('hd_export')
+        # a list of dicts of info gathered from hd_export sheet
+        self.help_desk = self.export.get_all_records()
 
     # method called by multi_key_sort to compare and sort multiple keys in a dictionary
     def cmp(self, a, b):
@@ -57,7 +51,7 @@ class SheetsController:
 
         def comparer(left, right):
             comparer_iter = (
-                cmp(fn(left), fn(right)) * mult
+                self.cmp(fn(left), fn(right)) * mult
                 for fn, mult in comparers
             )
             return next((result for result in comparer_iter if result), 0)
@@ -92,12 +86,12 @@ class SheetsController:
         return
 
     # method resets the python_input sheet upon the clicking of the web-page button
-    # def reset_py_data():
-    #     cell_reset = self.python.range(2, 1, len(py_input)+1, 4)
-    #     for cell in cell_reset:
-    #         cell.value = ''
-    #     self.python.update_cells(cell_reset)
-    #     return
+    def reset_py_data(self):
+        cell_reset = self.python.range(2, 1, len(self.scanner_shifts)+1, 4)
+        for cell in cell_reset:
+            cell.value = ''
+        self.python.update_cells(cell_reset)
+        return
 
     # method updates a row of cells in flagged_items with info on any bad shifts
     def flagged_cells(self, hd_export, py_input, hd_row, py_row, flag_num, skipped):
@@ -122,6 +116,10 @@ class SheetsController:
             # empty shifts set as 'zz - empty' to put them at the bottom of the alphabetical sort
             if item['Employee Name'] == '':
                 item['Employee Name'] = 'zz - empty'
+            if item['Start Time'][-1] != 'M':
+                continue
+            if item['End Time'][-1] != 'M':
+                continue
             item['Start Time'] = self.convert24(item['Start Time'])
             item['End Time'] = self.convert24(item['End Time'])
 
@@ -160,11 +158,16 @@ class SheetsController:
                 item['Username'] = 'Leif Riveness'
             elif item['Username'] == 'trevor-v':
                 item['Username'] = 'Trevor Vollendorf'
-            else:
+            elif item['Username'] == 'micah-w':
                 item['Username'] = 'Micah Weiberg'
 
-            item['In'] = self.convert24(item['In'])
-            item['Out'] = self.convert24(item['Out'])
+            if item['In'] == '':
+                break
+            elif item['In'][-1] != 'M':
+                continue
+            else:
+                item['In'] = self.convert24(item['In'])
+                item['Out'] = self.convert24(item['Out'])
 
         # sorts hd_export and py_input dictionaries in order of name, then date, then start/clock-in time
         hd_export = self.multi_key_sort(hd_export, ['Employee Name', 'Date', 'Start Time'])

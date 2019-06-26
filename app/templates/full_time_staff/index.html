@@ -5,6 +5,8 @@
     <div class="sub-nav">
         <a class="nav-button btn btn-success" id="generate-shifts" href="{{ url_for('ShiftsView:generate_shifts') }}">Generate Flagged Shifts</a>
         <br/><br/>
+        <a class="nav-button btn btn-danger" id="clear-rfid" href="{{ url_for('ShiftsView:reset_rfid') }}">Clear RFID Data</a>
+        <br/><br/>
         <a class="nav-buttons btn btn-info" href="https://tinyurl.com/y6tp7ylg">Access full spreadsheet</a>
         <br/><br/>
         <a class="nav-buttons btn btn-primary" id="show-shifts" href="{{ url_for('ShiftsView:show_shifts') }}">Show Shifts</a>

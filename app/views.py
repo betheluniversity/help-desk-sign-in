@@ -26,5 +26,10 @@ class ShiftsView(FlaskView):
 
     @route('/generate_shifts', methods=['GET'])
     def generate_shifts(self):
-        # return render_template('full_time_staff/index.html', **locals())
-        return self.controller.shift_generator()
+        gen = self.controller.shift_generator(self.controller.help_desk, self.controller.scanner_shifts)
+        return render_template('full_time_staff/index.html', **locals()), gen
+
+    @route('/reset_RFID', methods=['GET'])
+    def reset_rfid(self):
+        res = self.controller.reset_py_data()
+        return render_template('full_time_staff/index.html', **locals()), res
