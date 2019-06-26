@@ -1,8 +1,13 @@
 from flask_classy import FlaskView, route
 from flask import render_template
 
+from app.sheets_controller import SheetsController
+
 
 class ShiftsView(FlaskView):
+    def __init__(self):
+        self.controller = SheetsController()
+
     @route('/')
     def index(self):
         return render_template('index.html', **locals())
@@ -21,9 +26,5 @@ class ShiftsView(FlaskView):
 
     @route('/generate_shifts', methods=['GET'])
     def generate_shifts(self):
-        # do something
-        return render_template('full_time_staff/index.html', **locals())
-
-    @route('get_new_data')
-    def get_new_data(self):
-        return 'EMPTY'
+        # return render_template('full_time_staff/index.html', **locals())
+        return self.controller.shift_generator()

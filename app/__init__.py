@@ -1,7 +1,7 @@
 from flask import Flask
 
 # Declaring and registering the view
-from app.views.__init__ import ShiftsView
+from app.views import ShiftsView
 
 app = Flask(__name__)
 app.config.from_object('config')
