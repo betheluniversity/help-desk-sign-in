@@ -110,8 +110,20 @@ a.nav-link:focus, a.nav-link:hover.active {
     max-width: 95%;
 }
 
-#sign-in-button, #sign-out-button, #show-shifts {
+.btn-primary {
     background-color: #005eb2;
     border: 1px solid #0053b2;
+    color: #fff;
+}
+
+.btn-success {
+    background-color: #14b80f;
+    border: 1px solid #14b80f;
+    color: #fff;
+}
+
+.btn-danger {
+    background-color: crimson;
+    border: 1px solid crimson;
     color: #fff;
 }

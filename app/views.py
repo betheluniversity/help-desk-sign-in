@@ -16,6 +16,14 @@ class ShiftsView(FlaskView):
     def student_employees_index(self):
         return render_template('student_employees/index.html', **locals())
 
+    @route('/clock_in')
+    def clock_in(self):
+        return render_template('/student_employees/clock_in.html', **locals())
+
+    @route('/clock_out')
+    def clock_out(self):
+        return render_template('/student_employees/clock_out.html', **locals())
+
     @route('/full_time_staff')
     def full_time_staff_index(self):
         return render_template('full_time_staff/index.html', **locals())
