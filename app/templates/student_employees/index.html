@@ -1,43 +1,43 @@
 {% extends 'help_desk_base.html' %}
 
 {% block body_content %}
-    <div class="col-md-12">
-        <div class="card info">
-            <div class="card-body text-center">
-                <h3 class="card-text">Help Desk Time Clock</h3>
+     <form action="{{ submit_url }}" method="post">
+        {% if env != 'prod' %}  {# Can't sign in for other users in dev env, so dropdown to choose student #}
+            <div>
+                <label for="student-select">Select a student to sign in:</label>
+                <select id="student-select" name="selected-student">
+                    <option value="-1">Choose a Student</option>
+                    {% for student in all_students %}
+                        <option value="{{ student.id }}">{{ student.firstName }} {{ student.lastName }}</option>
+                    {% endfor %}
+                </select>
             </div>
+        {% endif %}
+        <div>
+            <label>Select whether you are signing in or out of a shift:</label>
+            <a class="btn btn-primary" href="{{ url_for('ShiftsView:sign_in') }}">Sign in</a>
+            <a class="btn btn-primary" href="{{ url_for('ShiftsView:sign_out') }}">Sign out</a>
         </div>
-        <div class="row">
-            <div class="col-md-6">
-                <a class="dashboard-link" href="{{ url_for('ShiftsView:clock_in') }}">
-                    <div class="card dashboard-card text-center">
-                        <div class="card-body btn-primary" id="clock-in-button">
-                            <h4>Clock In</h4>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6">
-                <a class="dashboard-link" href="{{ url_for('ShiftsView:clock_out') }}">
-                    <div class="card dashboard-card text-center">
-                        <div class="card-body btn-primary" id="clock-out-button">
-                            <h4>Clock Out</h4>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-<!--        <div class="row">-->
-<!--            <div class="alert alert-success text-center m-3 mb-3 mx-auto" role="alert" style="width: 30rem;">-->
-<!--                <h4 class="alert-heading">Sign in/out successful</h4>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="row">-->
-<!--            <div class="alert alert-danger text-center m-3 mb-3 mx-auto" role="alert" style="width: 30rem;">-->
-<!--                <h4 class="alert-heading">Error signing in/out</h4>-->
-<!--                <p>Click to refresh and try again</p>-->
-<!--                <a href="#" class="btn btn-light" style="width: 13rem;">Refresh</a>-->
-<!--            </div>-->
-<!--        </div>-->
-    </div>
+     </form>
+
+    <table id="student-attendance" class="table table-striped table-bordered">
+        <tr>
+            <th data-toggle="tooltip" data-placement="top" title="Student Name">Name</th>
+            <th data-toggle="tooltip" data-placement="top" title="Shift Number">Shift Number</th>
+            <th data-toggle="tooltip" data-placement="top" title="Time Signed Into Session">Time In</th>
+            <th data-toggle="tooltip" data-placement="top" title="Time Signed Out of Session">Time Out</th>
+        </tr>
+        <tr>
+            <td>Micah Weiberg</td>
+            <td>1</td>
+            <td>12:30 PM</td>
+            <td>1:45 PM</td>
+        </tr>
+        <tr>
+            <td>Micah Weiberg</td>
+            <td>2</td>
+            <td>6:00 PM</td>
+            <td></td>
+        </tr>
+    </table>
 {% endblock %}

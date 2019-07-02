@@ -1,5 +1,4 @@
 a.dashboard-link{
-    color: black;
     text-decoration: none;
 }
 
@@ -13,10 +12,6 @@ a.nav-link.button.nav-bar-active {
 
 a.nav-link:hover{
     text-decoration:underline !important;
-}
-
-a.disabled:hover {
-    color: black !important;
 }
 
 body {
@@ -37,10 +32,14 @@ div.centered {
     text-align:center;
 }
 
+div.card.info.help-page {
+    margin-bottom: 10px;
+}
+
 div.dashboard-card{
     background-color: #f2f2f2;
     border-color: #d8d8d8;
-    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 div.dashboard-info{
@@ -53,24 +52,12 @@ html, body {
     background-color: #fafafa;
 }
 
-li.list-group-item{
-    background-color: #fafafa;
-}
-
-nav a {
-    color: gray;
-}
-
 nav.navbar{
     padding: 0 10px;
 }
 
 span.lab-title{
     color: #ffc600
-}
-
-ul.list-group{
-    margin-top: 10px;
 }
 
 .active {
@@ -99,15 +86,14 @@ ul.list-group{
     padding: 1em 2em !important;
 }
 
-a.nav-link:focus, a.nav-link:hover.active {
-    text-decoration: none !important;
-    color: white !important;
-}
-
 .wc-margins {
     width: 100%;
     margin: 20px auto;
     max-width: 95%;
+}
+
+a.btn.btn-primary {
+    margin: 0 5px 10px 5px;
 }
 
 .btn-primary {

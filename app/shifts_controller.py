@@ -6,6 +6,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 from datetime import datetime
 from datetime import timedelta
+from flask import abort
+from flask import session as flask_session
 from functools import cmp_to_key
 from operator import itemgetter as i
 
@@ -16,28 +18,27 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['INSTALL_LOCATION'], scope)
 client = gspread.authorize(credentials)
 flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
+# accesses info from python_input, which takes in clock in/out info from RFID scanner
 python = client.open('help_desk_sign_in').worksheet('python_input')
+# accesses info from hd_export, where the manager posts his expected shift schedule
 export = client.open('help_desk_sign_in').worksheet('hd_export')
 
 
-class SheetsController:
+class ShiftsController:
     def __init__(self):
-        # self.scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        # self.credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['INSTALL_LOCATION'], self.scope)
-        # self.client = gspread.authorize(self.credentials)
-
         # initializing sheet objects and lists for reading and writing from Google Sheets
         # variables with '.get_all.records()' are lists of dictionaries from their respective sheets
-        # self.flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
         self.fi = flagged_items.get_all_records()
-        # accesses info from python_input, which takes in clock in/out info from RFID scanner
-        # self.python = client.open('help_desk_sign_in').worksheet('python_input')
         # a list of dicts of info gathered from python_input sheet
         self.scanner_shifts = python.get_all_records()
-        # accesses info from hd_export, where the manager posts his expected shift schedule
-        # self.export = client.open('help_desk_sign_in').worksheet('hd_export')
         # a list of dicts of info gathered from hd_export sheet
         self.help_desk = export.get_all_records()
+
+    def check_roles_and_route(self, allowed_roles):
+        for role in allowed_roles:
+            if role in flask_session['USER-ROLES']:
+                return True
+            abort(403)
 
     # method called by multi_key_sort to compare and sort multiple keys in a dictionary
     def cmp(self, a, b):
