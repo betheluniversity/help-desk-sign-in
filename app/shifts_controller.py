@@ -198,6 +198,35 @@ class ShiftsController:
                 continue
             shift_count = -1  # reset shift counter if this is the first shift in a row
 
+            # sets variables for time in, start time, end time, and duration of the shift from manager's info in hd
+            # export
+            time_in = datetime.strptime(py_input[p]['Date']+py_input[p]['In'], '%x%H:%M')
+            start_time = datetime.strptime(hd_export[n]['Date']+hd_export[n]['Start Time'], '%x%H:%M')
+            end_time = datetime.strptime(hd_export[n]['Date']+hd_export[n]['End Time'], '%x%H:%M')
+            set_duration = end_time - start_time
+
+            if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
+                if start_time - timedelta(minutes=10) <= \
+                        datetime.strptime(py_input[p+1]['Date']+py_input[p+1]['In'], '%x%H:%M') \
+                        <= start_time + timedelta(minutes=15):
+                    p += 1
+                    time_in = datetime.strptime(py_input[p]['Date'] + py_input[p]['In'], '%x%H:%M')
+                else:
+                    # updates the flagged_items sheet with info about that shift
+                    self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                    flag_count += 1
+
+                    # if student forgets to clock out on a multiple shift
+                    while datetime.strptime(hd_export[n]['Date'] + hd_export[n]['End Time'], '%x%H:%M') == \
+                            datetime.strptime(hd_export[n]['Date'] + hd_export[n + 1]['Start Time'], '%x%H:%M') and \
+                            hd_export[n]['Employee Name'] == hd_export[n + 1]['Employee Name']:
+                        n += 1
+                        shift_count = n
+                        # updates the flagged_items sheet with info about that shift
+                        self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                        flag_count += 1
+                    continue
+
             # case: student forgets to clock out (time out value is empty)
             # note: forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
             if py_input[p]['Out'] == '':
@@ -206,8 +235,7 @@ class ShiftsController:
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while datetime.strptime(hd_export[n]['Date']+hd_export[n]['End Time'], '%x%H:%M') == \
-                        datetime.strptime(hd_export[n]['Date']+hd_export[n+1]['Start Time'], '%x%H:%M') and \
+                while end_time == datetime.strptime(hd_export[n]['Date']+hd_export[n+1]['Start Time'], '%x%H:%M') and \
                         hd_export[n]['Employee Name'] == hd_export[n+1]['Employee Name']:
                     n += 1
                     shift_count = n
@@ -217,16 +245,6 @@ class ShiftsController:
 
                 p += 1
                 continue
-
-            # sets variables for time in, time out, and duration of the shift from RFID entry in python_input
-            time_in = datetime.strptime(py_input[p]['Date']+py_input[p]['In'], '%x%H:%M')
-            time_out = datetime.strptime(py_input[p]['Date']+py_input[p]['Out'], '%x%H:%M')
-            actual_duration = time_out - time_in
-
-            # sets variables for start time, end time, and duration of the shift from manager's info in hd_export
-            start_time = datetime.strptime(hd_export[n]['Date']+hd_export[n]['Start Time'], '%x%H:%M')
-            end_time = datetime.strptime(hd_export[n]['Date']+hd_export[n]['End Time'], '%x%H:%M')
-            set_duration = end_time - start_time
 
             # case: student skips entire shift or forgets to clock in AND out
             if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=15):
@@ -243,8 +261,11 @@ class ShiftsController:
                     # updates the flagged_items sheet with info about that shift
                     self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
                     flag_count += 1
-
                 continue
+
+            # sets variables for time out and duration of the shift from RFID entry in python_input
+            time_out = datetime.strptime(py_input[p]['Date']+py_input[p]['Out'], '%x%H:%M')
+            actual_duration = time_out - time_in
 
             # case: student works multiple shifts in a row
             while hd_export[n]['Date'] == hd_export[n+1]['Date'] and hd_export[n]['End Time'] == \
