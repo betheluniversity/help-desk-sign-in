@@ -205,6 +205,7 @@ class ShiftsController:
             end_time = datetime.strptime(hd_export[n]['Date']+hd_export[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
+            # case: student clocks in and out when they were not scheduled for a shift at that time
             if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
                 if start_time - timedelta(minutes=10) <= \
                         datetime.strptime(py_input[p+1]['Date']+py_input[p+1]['In'], '%x%H:%M') \
