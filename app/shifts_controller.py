@@ -40,6 +40,22 @@ class ShiftsController:
                 return True
             abort(403)
 
+    def student_sign_in(self, clock_type):  # , username):
+        timestamp = datetime.now()
+        time = timestamp.strftime('%I:%M %p')
+        if time[0] == '0':
+            time = time[1:]
+        print(time)
+        cell_list = python.range(3, 1, 3, 8)
+        cell_list[0].value = ''  # pass in username
+        cell_list[1].value = timestamp.strftime('%x')
+
+        if clock_type == 'sign in':
+            cell_list[2].value = time
+        else:  # clock_type == 'sign out'
+            cell_list[3].value = time
+        python.update_cells(cell_list)
+
     # method called by multi_key_sort to compare and sort multiple keys in a dictionary
     def cmp(self, a, b):
         return (a > b) - (a < b)
@@ -78,7 +94,7 @@ class ShiftsController:
         if str1 == '':
             return ''
         d = datetime.strptime(str1, '%H:%M')
-        if d.strftime('%I:%M %p')[:1] == '0':
+        if d.strftime('%I:%M %p')[0] == '0':
             return d.strftime('%I:%M %p')[1:]
         return d.strftime('%I:%M %p')
 
@@ -218,9 +234,9 @@ class ShiftsController:
                     flag_count += 1
 
                     # if student forgets to clock out on a multiple shift
-                    while datetime.strptime(hd_export[n]['Date'] + hd_export[n]['End Time'], '%x%H:%M') == \
-                            datetime.strptime(hd_export[n]['Date'] + hd_export[n + 1]['Start Time'], '%x%H:%M') and \
-                            hd_export[n]['Employee Name'] == hd_export[n + 1]['Employee Name']:
+                    while hd_export[n]['Date'] == hd_export[n + 1]['Date'] and hd_export[n]['End Time'] == \
+                            hd_export[n + 1]['Start Time'] and hd_export[n]['Employee Name'] == \
+                            hd_export[n + 1]['Employee Name']:
                         n += 1
                         shift_count = n
                         # updates the flagged_items sheet with info about that shift
@@ -254,9 +270,9 @@ class ShiftsController:
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while datetime.strptime(hd_export[n]['Date']+hd_export[n]['End Time'], '%x%H:%M') == \
-                        datetime.strptime(hd_export[n]['Date']+hd_export[n+1]['Start Time'], '%x%H:%M') and \
-                        hd_export[n]['Employee Name'] == hd_export[n+1]['Employee Name']:
+                while hd_export[n]['Date'] == hd_export[n + 1]['Date'] and hd_export[n]['End Time'] == \
+                        hd_export[n + 1]['Start Time'] and hd_export[n]['Employee Name'] == \
+                        hd_export[n + 1]['Employee Name']:
                     n += 1
                     shift_count = n
                     # updates the flagged_items sheet with info about that shift
@@ -285,4 +301,6 @@ class ShiftsController:
                 flag_count += 1
 
             p += 1
+
+        self.reset_py_data()
         return
