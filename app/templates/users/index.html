@@ -1,8 +1,0 @@
-{% extends 'help_desk_base.html' %}
-
-{% block subnav %}
-        <a id="home" class="nav-item nav-link {{ 'active' if '/users' == request.path else 'disabled'}}"
-           href="{{ url_for('ShiftsView:users_index') }}">Users</a>
-        <a id="add" class="nav-item nav-link {{ 'active' if 'users/search' in request.path else 'disabled'}}"
-           href="{{ url_for('ShiftsView:add_user') }}">Add</a>
-{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'help_desk_base.html' %}
+
+{% block body_content %}
+    <div class="custom-default row">
+        <div class="col-md-8">
+            <form id="user-info">
+<!--                    <input type="text" id="user-username" placeholder="Username">-->
+<!--                    <input type="text" id="user-card-id" placeholder="Card ID: 5 digit number on back of Bethel ID">-->
+<!--                    <input type="button" class="btn btn-primary" id="add-row" value="Add User">-->
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <input type="text" class="form-control chosen-container chosen-format" id="user-username" placeholder="Username">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <input type="text" class="form-control chosen-container chosen-format" id="user-card-id" placeholder="Card ID: 5 digit number on back of Bethel ID">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <input type="button" class="btn btn-primary" id="add-row" value="Add User">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-9">
+            <table id="table"  class="table table-striped table-bordered">
+                <thead>
+                     <tr>
+                         <th></th>
+                         <th data-toggle="tooltip" data-placement="top" title="Student Username">Username</th>
+                         <th data-toggle="tooltip" data-placement="top" title="Student Card ID">Card ID</th>
+                     </tr>
+                </thead>
+                <tbody>
+                     <tr>
+                         <td><input type="checkbox" name='record'</td>
+                         <td>mjw83735</td>
+                         <td>71390</td>
+                     </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-primary" id="delete-row">Delete User</button>
+        </div>
+    </div>
+<script>
+        $(document).ready(function() {
+                $("#add-row").click(function() {
+                        let username = $("#user-username").val();
+                        let card_id = $("#user-card-id").val();
+                        let markup = "<tr><td><input type='checkbox' name='record'></td><td>" + username + "</td><td>" + card_id + "</td></tr>";
+                        $("table tbody").append(markup);
+                        let input_data = {markup: markup};
+                        $.post('/#', input_data, function(output_data) {
+                                alert('This did it!')
+                        });
+                });
+                $("#delete-row").click(function() {
+                        $("table tbody").find('input[name="record"]').each(function() {
+                                if($(this).is(":checked")) {
+                                        $(this).parents("tr").remove();
+                                }
+                        });
+                });
+        });
+</script>
+{% endblock %}

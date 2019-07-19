@@ -40,12 +40,11 @@ class ShiftsController:
                 return True
             abort(403)
 
-    def student_sign_in(self, clock_type):  # , username):
+    def student_time_clock(self, clock_type):  # , username):
         timestamp = datetime.now()
         time = timestamp.strftime('%I:%M %p')
         if time[0] == '0':
             time = time[1:]
-        print(time)
         cell_list = python.range(3, 1, 3, 8)
         cell_list[0].value = ''  # pass in username
         cell_list[1].value = timestamp.strftime('%x')
@@ -115,7 +114,7 @@ class ShiftsController:
         return
 
     # method updates a row of cells in flagged_items with info on any bad shifts
-    def flagged_cells(self, hd_export, py_input, hd_row, py_row, flag_num, skipped):
+    def flagged_cells(self, hd_export, py_input, hd_row, py_row, flag_num, reason, skipped):
         cell_list = flagged_items.range(flag_num, 1, flag_num, 8)
         cell_list[0].value = hd_export[hd_row]['Shift ID']
         cell_list[1].value = hd_export[hd_row]['Date']
@@ -223,6 +222,7 @@ class ShiftsController:
 
             # case: student clocks in and out when they were not scheduled for a shift at that time
             if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
+                cause = 'No shift'
                 if start_time - timedelta(minutes=10) <= \
                         datetime.strptime(py_input[p+1]['Date']+py_input[p+1]['In'], '%x%H:%M') \
                         <= start_time + timedelta(minutes=15):
@@ -230,7 +230,7 @@ class ShiftsController:
                     time_in = datetime.strptime(py_input[p]['Date'] + py_input[p]['In'], '%x%H:%M')
                 else:
                     # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                    self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=True)
                     flag_count += 1
 
                     # if student forgets to clock out on a multiple shift
@@ -240,15 +240,16 @@ class ShiftsController:
                         n += 1
                         shift_count = n
                         # updates the flagged_items sheet with info about that shift
-                        self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                        self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=True)
                         flag_count += 1
                     continue
 
             # case: student forgets to clock out (time out value is empty)
             # note: forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
             if py_input[p]['Out'] == '':
+                cause = 'Forgot to clock out'
                 # updates the flagged_items sheet with info about that shift
-                self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=False)
+                self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=False)
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
@@ -257,7 +258,7 @@ class ShiftsController:
                     n += 1
                     shift_count = n
                     # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=False)
+                    self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=False)
                     flag_count += 1
 
                 p += 1
@@ -265,8 +266,9 @@ class ShiftsController:
 
             # case: student skips entire shift or forgets to clock in AND out
             if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=15):
+                cause = 'Skipped or forgot to clock shift'
                 # updates the flagged_items sheet with info about that shift
-                self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=True)
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
@@ -276,7 +278,7 @@ class ShiftsController:
                     n += 1
                     shift_count = n
                     # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=True)
+                    self.flagged_cells(hd_export, py_input, n, p, flag_count, cause, skipped=True)
                     flag_count += 1
                 continue
 
@@ -293,9 +295,16 @@ class ShiftsController:
                 actual_duration = time_out - time_in
                 shift_count = n
 
-            # case: student is late or leaves early
-            if time_in > start_time + timedelta(minutes=8) or \
-                    actual_duration < set_duration - timedelta(minutes=8):
+            # case: student is late
+            if time_in > start_time + timedelta(minutes=8):
+                cause = 'Late'
+                # updates the flagged_items sheet with info about that shift
+                self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=False)
+                flag_count += 1
+
+            # case: student leaves early and/or has shorter shift than scheduled
+            if actual_duration < set_duration - timedelta(minutes=8):
+                cause = 'Short shift'
                 # updates the flagged_items sheet with info about that shift
                 self.flagged_cells(hd_export, py_input, n, p, flag_count, skipped=False)
                 flag_count += 1

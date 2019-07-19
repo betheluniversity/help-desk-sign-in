@@ -100,20 +100,20 @@ a.btn.btn-primary.sign-out {
     margin: 0;
 }
 
+div.form-group.col-md-6, #add-user-row {
+    margin-bottom: 12px;
+}
+
+.staff-row {
+    margin: 0;
+}
+
+.staff {
+    margin-right: 15px;
+}
+
 .btn-primary {
     background-color: #005eb2;
     border: 1px solid #0053b2;
-    color: #fff;
-}
-
-.btn-success {
-    background-color: #14b80f;
-    border: 1px solid #14b80f;
-    color: #fff;
-}
-
-.btn-danger {
-    background-color: crimson;
-    border: 1px solid crimson;
     color: #fff;
 }

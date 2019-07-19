@@ -1,0 +1,35 @@
+{% extends 'help_desk_base.html' %}
+
+{% block body_content %}
+    <div class="col-md-12">
+        <div class="card info help-page">
+            <div class="card-body text-left">
+                <h4 class="card-text">
+                    Help:
+                </h4>
+                <h7 class="card-text">
+                    Generate Shifts: Runs the program to generate "bad" shifts and posts them in the
+                    'flagged_items' sheet of the Google Spreadsheet <br>
+                </h7>
+                <h7 class="card-text">
+                    Flagged Shifts: Opens a link to the collected data of "bad" shifts in the Google Spreadsheet in a
+                    new tab <br>
+                </h7>
+                <h7 class="card-text">
+                    Scanner Data: Opens a link to the collected data of scanner input of sign ins and outs in the Google
+                    Spreadsheet in a new tab <br>
+                </h7>
+                <h7 class="card-text">
+                    Help Desk Shifts: Opens a link to the manager input of help desk shifts in the Google Spreadsheet in
+                    a new tab
+                </h7>
+            </div>
+        </div>
+        <div class="staff-row">
+            <button class="btn btn-success staff" href="{{ url_for('ShiftsView:generate_shifts') }}">Generate Shifts</button>
+            <button class="btn btn-warning staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit?usp=sharing" target="_blank">Flagged Shifts</button>
+            <button class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=51470580" target="_blank">Scanner Data</button>
+            <button class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=2051794733" target="_blank">Help Desk Shifts</button>
+        </div>
+    </div>
+{% endblock %}
