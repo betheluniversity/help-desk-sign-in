@@ -1,0 +1,8 @@
+{% for user in users_list %}
+<tr>
+    <td><input type="checkbox" name='record'></td>
+    <td>{{ user['Name'] }}</td>
+    <td>{{ user['Username'] }}</td>
+    <td>{{ user['Card ID'] }}</td>
+</tr>
+{% endfor %}

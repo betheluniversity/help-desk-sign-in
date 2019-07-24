@@ -1,3 +1,15 @@
+a.btn.btn-primary.sign-out {
+    margin: 0;
+}
+
+.active {
+    max-height: 30px;
+    background-color: #0F2C52;
+    color: white !important;
+    border-radius: 6px;
+    padding: 3px 16px
+}
+
 a.dashboard-link{
     text-decoration: none;
 }
@@ -14,6 +26,10 @@ a.nav-link:hover{
     text-decoration:underline !important;
 }
 
+.background-blue {
+    background-color: #123563;
+}
+
 body {
     background: #ffffff;
     color: #222;
@@ -26,6 +42,13 @@ body {
     line-height: 1.5;
     position: relative;
     cursor: auto;
+}
+
+.btn-primary {
+    background-color: #005eb2;
+    border: 1px solid #0053b2;
+    color: #fff;
+    text-decoration-color: #fff;
 }
 
 div.centered {
@@ -48,32 +71,13 @@ div.dashboard-info{
     margin-top: 10px;
 }
 
+div.form-group.col-md-6, #add-user-row {
+    margin-bottom: 12px;
+    padding: 0 5px;
+}
+
 html, body {
     background-color: #fafafa;
-}
-
-nav.navbar{
-    padding: 0 10px;
-}
-
-span.lab-title{
-    color: #ffc600
-}
-
-.active {
-    max-height: 30px;
-    background-color: #0F2C52;
-    color: white !important;
-    border-radius: 6px;
-    padding: 3px 16px
-}
-
-.background-blue {
-    background-color: #123563;
-}
-
-.nav.margins {
-    padding: 0 2em;
 }
 
 .margins {
@@ -86,34 +90,32 @@ span.lab-title{
     padding: 1em 2em !important;
 }
 
-.wc-margins {
-    width: 100%;
-    margin: 20px auto;
-    max-width: 95%;
+.nav.margins {
+    padding: 0 2em;
 }
 
-a.btn.btn-primary {
-    margin: 0 5px 10px 5px;
+nav.navbar{
+    padding: 0 10px;
 }
 
-a.btn.btn-primary.sign-out {
-    margin: 0;
-}
-
-div.form-group.col-md-6, #add-user-row {
-    margin-bottom: 12px;
-}
-
-.staff-row {
-    margin: 0;
+span.lab-title{
+    color: #ffc600
 }
 
 .staff {
     margin-right: 15px;
 }
 
-.btn-primary {
-    background-color: #005eb2;
-    border: 1px solid #0053b2;
-    color: #fff;
+.staff-row {
+    margin: 0;
+}
+
+#title-bar {
+    margin: 0 0 12px;
+}
+
+.wc-margins {
+    width: 100%;
+    margin: 20px auto;
+    max-width: 95%;
 }

@@ -26,10 +26,10 @@
             </div>
         </div>
         <div class="staff-row">
-            <button class="btn btn-success staff" href="{{ url_for('ShiftsView:generate_shifts') }}">Generate Shifts</button>
-            <button class="btn btn-warning staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit?usp=sharing" target="_blank">Flagged Shifts</button>
-            <button class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=51470580" target="_blank">Scanner Data</button>
-            <button class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=2051794733" target="_blank">Help Desk Shifts</button>
+            <a class="btn btn-success staff" id="generate-shifts" href="{{ url_for('ShiftsView:generate_shifts') }}">Generate Shifts</a>
+            <a class="btn btn-warning staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit?usp=sharing" target="_blank">Flagged Shifts</a>
+            <a class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=51470580" target="_blank">Scanner Data</a>
+            <a class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=2051794733" target="_blank">Help Desk Shifts</a>
         </div>
     </div>
 {% endblock %}

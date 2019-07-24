@@ -1,0 +1,14 @@
+{% for shift in shifts_list %}
+<tr>
+    {% if shift['Username']|length %}
+        <td>{{ shift['Username'] }}</td>
+    {% else %}
+        <td>{{ }}</td>
+    <td>{{ shift['In'] }}</td>
+    {% if shift['Out']|length %}
+        <td>{{ shift['Out'] }}</td>
+    {% else %}
+        <td><a class='btn btn-primary sign-out' href="#">Sign Out</a></td>
+    {% endif %}
+</tr>
+{% endfor %}
