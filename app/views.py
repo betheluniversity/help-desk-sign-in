@@ -25,30 +25,22 @@ class ShiftsView(FlaskView):
                     shift['Username'] = user['Name']
         return render_template('student_index.html', shifts_list=shifts_list)
 
-    @route('/student_employees/timestamp', methods=['POST'])
-    def student_time_clock(self):
-        scan_type = 'sign out'
-        form = request.form
-        time = form.get("time")
-        card_id = ''
-        return render_template('student_index.html', **locals()), self.sc.student_time_clock(scan_type, card_id)
-
-    # @route('/no-cas/verify-scanner', methods=['POST'])
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
         form = request.form
         scan = form.get("scan")
         scan_success = re.search("\[\[(.+?)\]\]", scan)
-        if scan_success:
-            scan_type = 'sign in'
+        if scan_success and len(scan[2:-2]) == 5:
             card_id = int(scan[2:-2])
             shifts_list = self.sc.shifts_list()
             users_list = self.sc.users_list()
-            for user in users_list:
-                if user['Card ID'] == card_id:
-                    student_name = user['Name']
-            return render_template('student_table.html', student_name=student_name, shifts_list=shifts_list,
-                                   scan_type=scan_type), self.sc.student_time_clock(scan_type, card_id)
+            self.sc.student_time_clock(card_id)
+            shifts_list = self.sc.shifts_list()
+            for shift in shifts_list:
+                for user in users_list:
+                    if shift['Username'] == user['Username']:
+                        shift['Username'] = user['Name']
+            return render_template('student_table.html', shifts_list=shifts_list)
         else:
             return 'failed'
 

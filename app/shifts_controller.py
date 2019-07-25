@@ -49,27 +49,26 @@ class ShiftsController:
     #         abort(403)
 
     # enters clock ins and outs into 'scan_input' sheet
-    def student_time_clock(self, clock_type, card_id):
-        self.scanner_shifts = rfid_input.get_all_records()
+    def student_time_clock(self, card_id):
         timestamp = datetime.now()
         time = timestamp.strftime('%I:%M %p')
         if time[0] == '0':
             time = time[1:]
-        if clock_type == 'sign in':
-            for user in self.users:
-                if user['Card ID'] == card_id:
-                    cell_list = rfid_input.range(len(self.scanner_shifts) + 2, 1, len(self.scanner_shifts) + 2, 4)
-                    cell_list[0].value = user['Username']
-                    cell_list[1].value = timestamp.strftime('%x')
-                    cell_list[2].value = time
-                    rfid_input.update_cells(cell_list)
-                    return user['Name']
-                else:
-                    continue
-        else:  # clock_type == 'sign out'
-            cell_list = rfid_input.range(len(self.scanner_shifts) + 1, 1, len(self.scanner_shifts) + 1, 4)
-            cell_list[3].value = time
-            rfid_input.update_cells(cell_list)
+        cell_list = rfid_input.range(len(rfid_input.get_all_records()) + 2, 1, len(rfid_input.get_all_records()) + 2, 4)
+
+        for user in self.users_list():
+            if user['Card ID'] == card_id:
+                for shift in self.shifts_list():
+                    if shift['Username'] == user['Username'] and shift['Out'] == '':
+                        cell_list = rfid_input.range(self.shifts_list().index(shift) + 2, 1,
+                                                     self.shifts_list().index(shift) + 2, 4)
+                        cell_list[3].value = time
+                        rfid_input.update_cells(cell_list)
+                        return
+                cell_list[0].value = user['Username']
+                cell_list[1].value = timestamp.strftime('%x')
+                cell_list[2].value = time
+                rfid_input.update_cells(cell_list)
 
     def users_list(self):
         users_list = hd_users.get_all_records()

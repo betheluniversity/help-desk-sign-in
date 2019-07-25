@@ -3,7 +3,7 @@
 {% block body_content %}
     <form>
         <div class="centered margin-bottom-10">
-            <h3 id="title-bar">Scan ID to Sign In</h3>
+            <h3 id="title-bar">Scan ID to Sign In or Out</h3>
         </div>
     </form>
 
@@ -25,29 +25,11 @@
             $(document).on('keydown', function(key){
                 if(key.keyCode == 13) {
                     let url = "{{ url_for('ShiftsView:verify_scanner') }}";
-                    let d = new Date($.now());
-                    let h = d.getHours();
-                    let m = d.getMinutes();
-                    let p = 'AM';
-                    if (h > 11) {
-                        p = 'PM';
-                        if (h > 12) {
-                            h = d.getHours() - 12;
-                        }
-                    }
-                    if (m < 10) {
-                        m = '0' + d.getMinutes();
-                    }
-                    let time = h + ":" + m + " " + p;
-                    let student_name = ''
                     let scannedInput = {
                         'scan': input
                     };
                     $.post(url, scannedInput, function(success) {
                         if(success != 'failed') {
-                            alert("Signed in at "+success);
-                            // let markup = "<tr><td>" + student_name + "</td><td>" + time + "</td><td><a class='btn btn-primary sign-out' href='#'>Sign Out</a></td>";
-                            // $("table tbody").append(markup);
                             $("#student-tbody").html(success);
                             input= "";
                         } else {
@@ -58,17 +40,6 @@
                 } else {
                     input = input + key.key;
                 }
-            });
-            $(".btn.btn-primary.sign-out").click(function() {
-                let d = new Date($.now());
-                let time = d.getHours()+":"+d.getMinutes();
-
-                let input_data = {
-                    'time': time
-                };
-                $.post('/student_employees/timestamp', input_data, function(output_data) {
-                    alert("Signed out at "+time);
-                });
             });
         });
     </script>
