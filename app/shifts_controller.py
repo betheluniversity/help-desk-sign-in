@@ -1,13 +1,12 @@
 # Global
 import gspread
+from gspread.exceptions import APIError
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Packages
 import datetime
 from datetime import datetime
 from datetime import timedelta
-from flask import abort
-from flask import session as flask_session
 from functools import cmp_to_key
 from operator import itemgetter as i
 
@@ -23,6 +22,8 @@ client = gspread.authorize(credentials)
 flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
 # 'rfid_input' stores the clock in/out info from the Help Desk RFID scanner, tracking student attendance
 rfid_input = client.open('help_desk_sign_in').worksheet('scan_input')
+# 'current_day' stores the clock in/out info from the Help Desk scanner just for the current day to display on the site
+current_day = client.open('help_desk_sign_in').worksheet('current_day')
 # 'hd_export' stores where the manager posts his expected shift schedule, typically for a two-week period
 hd_export = client.open('help_desk_sign_in').worksheet('hd_export')
 # 'hd_users' stores where the site inputs student username and card ID info for shift comparisons
@@ -36,17 +37,12 @@ class ShiftsController:
         self.fi = flagged_items.get_all_records()
         # a list of dicts of info gathered from scan_input sheet
         self.scanner_shifts = rfid_input.get_all_records()
+        # a list of dicts of info gathered from current_day sheet
+        self.today = current_day.get_all_records()
         # a list of dicts of info gathered from hd_export sheet
         self.hd_shifts = hd_export.get_all_records()
         # a list of dicts of info gathered from hd_users sheet
         self.users = hd_users.get_all_records()
-
-    # used to only allow admin access to staff and user pages of the site
-    # def check_roles_and_route(self, allowed_roles):
-    #     for role in allowed_roles:
-    #         if role in flask_session['USER-ROLES']:
-    #             return True
-    #         abort(403)
 
     # enters clock ins and outs into 'scan_input' sheet
     def student_time_clock(self, card_id):
@@ -54,29 +50,63 @@ class ShiftsController:
         time = timestamp.strftime('%I:%M %p')
         if time[0] == '0':
             time = time[1:]
-        cell_list = rfid_input.range(len(rfid_input.get_all_records()) + 2, 1, len(rfid_input.get_all_records()) + 2, 4)
+        # try:
+        scan_list = rfid_input.range(len(rfid_input.get_all_records()) + 2, 1, len(rfid_input.get_all_records()) + 2, 4)
+        # except APIError as api_error:
+        #     pass
 
         for user in self.users_list():
             if user['Card ID'] == card_id:
                 for shift in self.shifts_list():
                     if shift['Username'] == user['Username'] and shift['Out'] == '':
-                        cell_list = rfid_input.range(self.shifts_list().index(shift) + 2, 1,
+                        scan_list = rfid_input.range(self.shifts_list().index(shift) + 2, 1,
                                                      self.shifts_list().index(shift) + 2, 4)
-                        cell_list[3].value = time
-                        rfid_input.update_cells(cell_list)
+                        scan_list[3].value = time
+                        rfid_input.update_cells(scan_list)
                         return
-                cell_list[0].value = user['Username']
-                cell_list[1].value = timestamp.strftime('%x')
-                cell_list[2].value = time
-                rfid_input.update_cells(cell_list)
+                scan_list[0].value = user['Username']
+                scan_list[1].value = timestamp.strftime('%x')
+                scan_list[2].value = time
+                rfid_input.update_cells(scan_list)
 
+    def student_shifts_today(self, card_id):
+        timestamp = datetime.now()
+        time = timestamp.strftime('%I:%M %p')
+        if time[0] == '0':
+            time = time[1:]
+        day_list = \
+            current_day.range(len(current_day.get_all_records()) + 2, 1, len(current_day.get_all_records()) + 2, 4)
+
+        for user in self.users_list():
+            if user['Card ID'] == card_id:
+                for shift in current_day.get_all_records():
+                    if shift['Username'] == user['Username'] and shift['Out'] == '':
+                        day_list = current_day.range(current_day.get_all_records().index(shift) + 2, 1,
+                                                     current_day.get_all_records().index(shift) + 2, 4)
+                        day_list[3].value = time
+                        current_day.update_cells(day_list)
+                        return
+                day_list[0].value = user['Username']
+                day_list[1].value = timestamp.strftime('%x')
+                day_list[2].value = time
+                current_day.update_cells(day_list)
+
+    # the __init__ method at the top refreshes the list of dictionaries only at the start of running the program
+    # the 3 methods below refresh the necessary list of sheets called by the methods for the time clock and add users
+    # refreshes the list of dictionaries of the hd_users sheet, allowing the users page to be up to date
     def users_list(self):
         users_list = hd_users.get_all_records()
         return users_list
 
+    # refreshes the list of dictionaries of the scan_input sheet, allowing the total list of shifts to be up to date
     def shifts_list(self):
         shifts_list = rfid_input.get_all_records()
         return shifts_list
+
+    # refreshes the list of dictionaries of the current_day sheet, allowing the student page to be up to date
+    def day_list(self):
+        day_list = current_day.get_all_records()
+        return day_list
 
     # adds user info to the 'hd_users' sheet
     def add_users(self, student_name, username, card_id):

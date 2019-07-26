@@ -4,9 +4,6 @@
     <div class="col-md-12">
         <div class="card info help-page">
             <div class="card-body text-left">
-                <h4 class="card-text">
-                    Help:
-                </h4>
                 <h7 class="card-text">
                     Generate Shifts: Runs the program to generate "bad" shifts and posts them in the
                     'flagged_items' sheet of the Google Spreadsheet <br>
@@ -26,10 +23,23 @@
             </div>
         </div>
         <div class="staff-row">
-            <a class="btn btn-success staff" id="generate-shifts" href="{{ url_for('ShiftsView:generate_shifts') }}">Generate Shifts</a>
+            <input type="button" class="btn btn-success staff" id="generate-shifts" value="Generate Shifts">
             <a class="btn btn-warning staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit?usp=sharing" target="_blank">Flagged Shifts</a>
             <a class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=51470580" target="_blank">Scanner Data</a>
             <a class="btn btn-primary staff" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=2051794733" target="_blank">Help Desk Shifts</a>
         </div>
     </div>
+    <script>
+        $(document).ready(function() {
+            $("#generate-shifts").click(function() {
+                let url = "{{ url_for('ShiftsView:generate_shifts') }}";
+                let input_data = {};
+                $.post(url, input_data, function(output_data) {
+                    // currently just an alert, not sure what else would be needed in the post
+                    // can be turned into a Bootstrap alert in the future
+                    alert('Shift generator complete');
+                });
+            });
+        });
+    </script>
 {% endblock %}

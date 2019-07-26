@@ -49,13 +49,12 @@ body {
     border: 1px solid #0053b2;
     color: #fff;
 }
+div.card.info.help-page {
+    margin-bottom: 10px;
+}
 
 div.centered {
     text-align:center;
-}
-
-div.card.info.help-page {
-    margin-bottom: 10px;
 }
 
 div.dashboard-card{

@@ -1,10 +1,3 @@
-$(document).ready(function() {
-    // Currently does nothing but display an in-browser alert when clicked
-    $("#generate-shifts").click(function() {
-       let input_data = {'clicked': 'true'};
-       $.post('/full_time_staff/generate_shifts', input_data, function(output_data) {
-            // alert('CLICKED')
-       });
-       alert('CLICK')
-    });
-});
+// nothing here currently
+// all JS code is currently in the HTML files for student_index, staff_index, and users_index
+// could be moved here instead of how it currently resides in HTML files as <script>
