@@ -1,6 +1,7 @@
 # Global
 import gspread
-from gspread.exceptions import APIError
+# from gspread.exceptions import APIError
+# import schedule
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Packages
@@ -9,6 +10,7 @@ from datetime import datetime
 from datetime import timedelta
 from functools import cmp_to_key
 from operator import itemgetter as i
+# import time
 
 # Local
 from app import app
@@ -18,108 +20,102 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['INSTA
 client = gspread.authorize(credentials)
 
 # variables with 'client.open' grant access to that specific sheet of the Help Desk Sign In Google Sheet
-# 'flagged_items' stores the "bad" shifts of students when the scanned input is compared to their schedule
-flagged_items = client.open('help_desk_sign_in').worksheet('flagged_items')
-# 'rfid_input' stores the clock in/out info from the Help Desk RFID scanner, tracking student attendance
-rfid_input = client.open('help_desk_sign_in').worksheet('scan_input')
-# 'current_day' stores the clock in/out info from the Help Desk scanner just for the current day to display on the site
-current_day = client.open('help_desk_sign_in').worksheet('current_day')
-# 'hd_export' stores where the manager posts his expected shift schedule, typically for a two-week period
-hd_export = client.open('help_desk_sign_in').worksheet('hd_export')
-# 'hd_users' stores where the site inputs student username and card ID info for shift comparisons
-hd_users = client.open('help_desk_sign_in').worksheet('hd_users')
+spreadsheet = client.open('help_desk_sign_in')
+# 'gsheet_flagged_shifts' stores the "bad" shifts of students when the scanned input is compared to their schedule
+gsheet_flagged_shifts = spreadsheet.worksheet('flagged_shifts')
+# 'gsheet_scan_input' stores the clock in/out info from the Help Desk RFID scanner, tracking student attendance
+gsheet_scan_input = spreadsheet.worksheet('scan_input')
+# 'gsheet_current_day' stores the time-clock info from the RFID scanner just for the current day to display on the site
+gsheet_current_day = spreadsheet.worksheet('current_day')
+# 'gsheet_hd_export' stores where the manager posts his expected shift schedule, typically for a two-week period
+gsheet_hd_export = spreadsheet.worksheet('hd_export')
+# 'gsheet_hd_users' stores where the site inputs student username and card ID info for shift comparisons
+gsheet_hd_users = spreadsheet.worksheet('hd_users')
 
 
 class ShiftsController:
     def __init__(self):
         # initializing sheet objects and lists for reading and writing from Google Sheets
         # variables with '.get_all.records()' are lists of dictionaries from their respective sheets
-        self.fi = flagged_items.get_all_records()
+        self.flagged = gsheet_flagged_shifts.get_all_records()
         # a list of dicts of info gathered from scan_input sheet
-        self.scanner_shifts = rfid_input.get_all_records()
+        self.input = gsheet_scan_input.get_all_records()
         # a list of dicts of info gathered from current_day sheet
-        self.today = current_day.get_all_records()
+        self.today = gsheet_current_day.get_all_records()
         # a list of dicts of info gathered from hd_export sheet
-        self.hd_shifts = hd_export.get_all_records()
+        self.export = gsheet_hd_export.get_all_records()
         # a list of dicts of info gathered from hd_users sheet
-        self.users = hd_users.get_all_records()
+        self.users = gsheet_hd_users.get_all_records()
 
-    # enters clock ins and outs into 'scan_input' sheet
+    # enters clock ins and outs into scan_input sheet
+    # card id: 5-digit ID on Bethel IDs used to identify users
     def student_time_clock(self, card_id):
         timestamp = datetime.now()
-        time = timestamp.strftime('%I:%M %p')
-        if time[0] == '0':
-            time = time[1:]
-        # try:
-        scan_list = rfid_input.range(len(rfid_input.get_all_records()) + 2, 1, len(rfid_input.get_all_records()) + 2, 4)
-        # except APIError as api_error:
-        #     pass
+        # formats the time into string format (example: 12:00 PM)
+        current_time = timestamp.strftime('%-I:%M %p')
+        # the cell_list below applies as a clock-in, which is assumed unless the clock-out criteria are met within the
+        # double for-loops for shifts_list and users_list
+        # cell_list sets the range of cells in the Google Sheet to append the data to
+        # len(self.shifts_list) + 2 is the row in the scan_input sheet this cell_list will append to
+        # len(self.shifts_list) + 2 = number of shifts currently entered + 2
+        # 2 = +1 for the header row in scan_input and +1 for a new entry into the list
+        cell_list = gsheet_scan_input.range(len(self.shifts_list()) + 2, 1, len(self.shifts_list()) + 2, 4)
 
+        # searching through users and shifts to match card_id and determine clock in or out
         for user in self.users_list():
             if user['Card ID'] == card_id:
                 for shift in self.shifts_list():
+                    # if shifts_list username matches users_list username and the shift's clock out is empty,
+                    # this is a clock-out. cell_list sets the row in scan_input to append to as
+                    # self.shifts_list().index(shift) + 2
+                    # self.shifts_list().index(shift) = the index of that user's original clock-in
+                    # len(self.shifts_list() is not used so the clock-out is not appended to a new row
                     if shift['Username'] == user['Username'] and shift['Out'] == '':
-                        scan_list = rfid_input.range(self.shifts_list().index(shift) + 2, 1,
-                                                     self.shifts_list().index(shift) + 2, 4)
-                        scan_list[3].value = time
-                        rfid_input.update_cells(scan_list)
-                        return
-                scan_list[0].value = user['Username']
-                scan_list[1].value = timestamp.strftime('%x')
-                scan_list[2].value = time
-                rfid_input.update_cells(scan_list)
+                        cell_list = gsheet_scan_input.range(self.shifts_list().index(shift) + 2, 1,
+                                                            self.shifts_list().index(shift) + 2, 4)
+                        cell_list[3].value = current_time
+                        gsheet_scan_input.update_cells(cell_list)
+                # cell_list[number].value sets a cell to a value, with number = column number in the Google Sheet range
+                cell_list[0].value = user['Username']  # sets username
+                cell_list[1].value = timestamp.strftime('%x')  # sets date
+                cell_list[2].value = current_time  # sets time in as current time
+                gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
 
+    # enters clock ins and outs into current_day sheet
+    # card id: 5-digit ID on Bethel IDs used to identify users
     def student_shifts_today(self, card_id):
         timestamp = datetime.now()
-        time = timestamp.strftime('%I:%M %p')
-        if time[0] == '0':
-            time = time[1:]
-        day_list = \
-            current_day.range(len(current_day.get_all_records()) + 2, 1, len(current_day.get_all_records()) + 2, 4)
+        current_time = timestamp.strftime('%-I:%M %p')
+        cell_list = \
+            gsheet_current_day.range(len(self.day_list()) + 2, 1,
+                                     len(self.day_list()) + 2, 4)
 
         for user in self.users_list():
             if user['Card ID'] == card_id:
-                for shift in current_day.get_all_records():
+                for shift in self.day_list():
                     if shift['Username'] == user['Username'] and shift['Out'] == '':
-                        day_list = current_day.range(current_day.get_all_records().index(shift) + 2, 1,
-                                                     current_day.get_all_records().index(shift) + 2, 4)
-                        day_list[3].value = time
-                        current_day.update_cells(day_list)
-                        return
-                day_list[0].value = user['Username']
-                day_list[1].value = timestamp.strftime('%x')
-                day_list[2].value = time
-                current_day.update_cells(day_list)
-
+                        cell_list = gsheet_current_day.range(self.day_list().index(shift) + 2, 1,
+                                                             self.day_list().index(shift) + 2, 4)
+                        cell_list[3].value = current_time
+                        gsheet_current_day.update_cells(cell_list)
+                cell_list[0].value = user['Username']
+                cell_list[1].value = timestamp.strftime('%x')
+                cell_list[2].value = current_time
+                gsheet_current_day.update_cells(cell_list)
+                
     # the __init__ method at the top refreshes the list of dictionaries only at the start of running the program
     # the 3 methods below refresh the necessary list of sheets called by the methods for the time clock and add users
     # refreshes the list of dictionaries of the hd_users sheet, allowing the users page to be up to date
     def users_list(self):
-        users_list = hd_users.get_all_records()
-        return users_list
+        return gsheet_hd_users.get_all_records()
 
     # refreshes the list of dictionaries of the scan_input sheet, allowing the total list of shifts to be up to date
     def shifts_list(self):
-        shifts_list = rfid_input.get_all_records()
-        return shifts_list
+        return gsheet_scan_input.get_all_records()
 
     # refreshes the list of dictionaries of the current_day sheet, allowing the student page to be up to date
     def day_list(self):
-        day_list = current_day.get_all_records()
-        return day_list
-
-    # adds user info to the 'hd_users' sheet
-    def add_users(self, student_name, username, card_id):
-        self.users = hd_users.get_all_records()
-        cell_list = hd_users.range(len(self.users)+2, 1, len(self.users)+2, 3)
-        cell_list[0].value = username
-        cell_list[1].value = student_name
-        cell_list[2].value = card_id
-        hd_users.update_cells(cell_list)
-
-    # called by multi_key_sort to compare and sort multiple keys in a dictionary
-    def cmp(self, a, b):
-        return (a > b) - (a < b)
+        return gsheet_current_day.get_all_records()
 
     # compares keys in a list of dictionaries to sort in ascending or descending order
     # items: the list of dictionaries
@@ -131,143 +127,118 @@ class ShiftsController:
             for col in columns
         ]
 
+        def cmp(a, b):
+            return (a > b) - (a < b)
+
         def comparer(left, right):
             comparer_iter = (
-                self.cmp(fn(left), fn(right)) * mult
+                cmp(fn(left), fn(right)) * mult
                 for fn, mult in comparers
             )
             return next((result for result in comparer_iter if result), 0)
         return sorted(items, key=cmp_to_key(comparer))
 
-    # converts a time-string from 12-hour format to 24-hour format for sorting chronologically easier
-    def convert24(self, str1):
+    # converts a time-string from one time format to the other
+    # convert_time: string of the time to be converted
+    # time_format: time format to be converted to (24-hour or 12-hour)
+    def convert_time_format(self, convert_time, time_format):
         # if time slot is empty
-        if str1 == '':
+        if convert_time == '':
             return ''
-        d = datetime.strptime(str1, '%I:%M %p')
-        return d.strftime('%H:%M')
+        # converts a time-string to 24-hour format for sorting chronologically easier
+        if time_format == 24:
+            d = datetime.strptime(convert_time, '%I:%M %p')
+            return d.strftime('%H:%M')
+        # converts a time-string to 12-hour format for easier readability
+        else:  # format == 12
+            d = datetime.strptime(convert_time, '%H:%M')
+            return d.strftime('%-I:%M %p')
 
-    # converts a time-string from 24-hour format to 12-hour format for easier readability
-    def convert12(self, str1):
-        # if time slot is empty
-        if str1 == '':
-            return ''
-        d = datetime.strptime(str1, '%H:%M')
-        if d.strftime('%I:%M %p')[0] == '0':
-            return d.strftime('%I:%M %p')[1:]
-        return d.strftime('%I:%M %p')
-
-    # resets the 'flagged_items' sheet upon each new running of the program
-    def reset_flagged(self):
-        cell_reset = flagged_items.range(2, 1, len(self.fi)+1, 8)
+    # clears all cells in a specified sheet and resets their values to empty strings
+    # sheet: sheet to be cleared
+    # cols: number of columns in the sheet range to be cleared
+    def reset_sheet_data(self, sheet, cols):
+        # cell_reset sets the range of rows to clear between row 2 and row len(sheet.get_all_records())+1
+        # len(sheet.get_all_records())+1 = length of the specified sheet (# of rows with values in cell(s)) + 1
+        cell_reset = sheet.range(2, 1, len(sheet.get_all_records())+1, cols)
         for cell in cell_reset:
             cell.value = ''
-        flagged_items.update_cells(cell_reset)
-        return
+        sheet.update_cells(cell_reset)
 
-    # resets the 'scan_input' sheet upon each new running of the program
-    def reset_scan_data(self):
-        cell_reset = rfid_input.range(2, 1, len(self.scanner_shifts)+1, 4)
-        for cell in cell_reset:
-            cell.value = ''
-        rfid_input.update_cells(cell_reset)
-        return
+    # updates a row of cells in 'gsheet_flagged_shifts' with info on any "bad" shifts
+    # hd_shifts: list of dictionaries of shifts gathered from hd_export sheet
+    # scan_shifts: list of dictionaries of shifts gathered from scan_input sheet
+    # hd_row: specific row from hd_export that should be flagged as "bad"
+    # scan_row: specific row from scan_input that should be flagged as "bad"
+    # flag_num: specifies the row of flagged_shifts sheet to append the new "bad" shift info to
+    # reason: string of info about why the shift was flagged
+    # skipped: boolean true/false value for if the student skipped the shift entirely
+    def flagged_cells(self, hd_shifts, scan_shifts, hd_row, scan_row, flag_num, reason, skipped):
+        cell_list = gsheet_flagged_shifts.range(flag_num, 1, flag_num, 8)
+        cell_list[0].value = hd_shifts[hd_row]['Shift ID']  # sets flagged shift ID
+        cell_list[1].value = hd_shifts[hd_row]['Date']  # sets lagged shift date
+        # sets flagged shift scheduled start time
+        cell_list[2].value = self.convert_time_format(hd_shifts[hd_row]['Start Time'], 12)
+        # sets flagged shift scheduled end time
+        cell_list[3].value = self.convert_time_format(hd_shifts[hd_row]['End Time'], 12)
+        cell_list[4].value = hd_shifts[hd_row]['Employee Name']  # sets flagged shift's student name
+        if skipped:  # if true, time in and out values are printed to flagged_shifts as empty strings
+            cell_list[5].value = ''  # sets clock in time to empty
+            cell_list[6].value = ''  # sets clock out time to empty
+        else:  # if false, time in and out values are printed to flagged_shifts as is
+            cell_list[5].value = self.convert_time_format(scan_shifts[scan_row]['In'], 12)  # sets clock in time
+            cell_list[6].value = self.convert_time_format(scan_shifts[scan_row]['Out'], 12)  # sets clock out time
+        cell_list[7].value = reason  # sets reason for "bad" shift
+        gsheet_flagged_shifts.update_cells(cell_list)  # appends to flagged_shifts sheet
 
-    # updates a row of cells in 'flagged_items' with info on any "bad" shifts
-    def flagged_cells(self, hd_input, scan_input, hd_row, scan_row, flag_num, reason, skipped):
-        cell_list = flagged_items.range(flag_num, 1, flag_num, 8)
-        cell_list[0].value = hd_input[hd_row]['Shift ID']
-        cell_list[1].value = hd_input[hd_row]['Date']
-        cell_list[2].value = self.convert12(hd_input[hd_row]['Start Time'])
-        cell_list[3].value = self.convert12(hd_input[hd_row]['End Time'])
-        cell_list[4].value = hd_input[hd_row]['Employee Name']
-        if skipped:  # if true, time in and out values are printed to flagged_items as empty strings
-            cell_list[5].value = ''
-            cell_list[6].value = ''
-        else:  # if false, time in and out values are printed to flagged_items as is
-            cell_list[5].value = self.convert12(scan_input[scan_row]['In'])
-            cell_list[6].value = self.convert12(scan_input[scan_row]['Out'])
-        cell_list[7].value = reason
-        flagged_items.update_cells(cell_list)
-        return
+    # runs the comparison between hd_export and scan_input to determine "bad" shifts
+    # hd_shifts: list of dictionaries of shifts gathered from hd_export sheet
+    # scan_shifts: list of dictionaries of shifts gathered from scan_input sheet
+    def shift_generator(self, hd_shifts, scan_shifts):
+        # converts times in hd_shifts to 24-hour format and sorts out empty shifts
+        for shift in hd_shifts:
+            # empty shifts set as 'zz - empty' to ensure they are at the bottom of the alphabetical sort
+            # note: setting empty shifts as a string of symbols/numbers places them at the front of the alphabetical
+            # sort and the method does not run properly if the empty shifts are at the front of the list of dictionaries
+            if shift['Employee Name'] == '':
+                shift['Employee Name'] = 'zz - empty'
+            shift['Start Time'] = self.convert_time_format(shift['Start Time'], 24)
+            shift['End Time'] = self.convert_time_format(shift['End Time'], 24)
 
-    # runs the comparison between 'hd_export' and 'scanned_input' to determine "bad" shifts
-    def shift_generator(self, hd_input, scan_input):
-        # converts times in hd_input to 24-hour format and sorts out empty shifts
-        for item in hd_input:
-            # empty shifts set as 'zz - empty' to put them at the bottom of the alphabetical sort
-            if item['Employee Name'] == '':
-                item['Employee Name'] = 'zz - empty'
-            if item['Start Time'][-1] != 'M':
-                continue
-            if item['End Time'][-1] != 'M':
-                continue
-            item['Start Time'] = self.convert24(item['Start Time'])
-            item['End Time'] = self.convert24(item['End Time'])
-
-        # converts times in scan_input to 24-hour format and usernames into full names
-        for item in scan_input:
-            # TODO: Comparing user-names in scan_input to names in hd_input
-            # TODO: Inefficient and non-maintainable code currently, will need to fix later
-            # TODO: Current setup exists for comparison in special cases
-            if item['Username'] == 'matt-b':
-                item['Username'] = 'Matt Barton'
-            elif item['Username'] == 'micah-b':
-                item['Username'] = 'Micah BigEagle'
-            elif item['Username'] == 'nate-c':
-                item['Username'] = 'Nate Chau'
-            elif item['Username'] == 'joren-e':
-                item['Username'] = 'Joren Eklund'
-            elif item['Username'] == 'kim-e':
-                item['Username'] = 'Kimberly Enemark'
-            elif item['Username'] == 'matt-f':
-                item['Username'] = 'Matt Flynn'
-            elif item['Username'] == 'caleb-f':
-                item['Username'] = 'Caleb Foster'
-            elif item['Username'] == 'ryken-k':
-                item['Username'] = 'Ryken Kreps'
-            elif item['Username'] == 'kevin-k':
-                item['Username'] = 'Kevin Krohn'
-            elif item['Username'] == 'jared-l':
-                item['Username'] = 'Jared Lundberg'
-            elif item['Username'] == 'ryan-m':
-                item['Username'] = 'Ryan McKimens'
-            elif item['Username'] == 'jacques-p':
-                item['Username'] = 'Jacques Perrault'
-            elif item['Username'] == 'lindsay-p':
-                item['Username'] = 'Lindsay Pila'
-            elif item['Username'] == 'leif-r':
-                item['Username'] = 'Leif Riveness'
-            elif item['Username'] == 'trevor-v':
-                item['Username'] = 'Trevor Vollendorf'
-            elif item['Username'] == 'micah-w':
-                item['Username'] = 'Micah Weiberg'
-
-            if item['In'] == '':
+        # converts times in scan_shifts to 24-hour format and user-names into full names
+        for shift in scan_shifts:
+            # searches through list of users to change the username category in the shifts list into full names
+            # user-names are temporarily converted to full names for alphabetical sorting
+            for user in self.users_list():
+                if shift['Username'] == user['Username']:
+                    shift['Username'] = user['Name']
+            # if time-in is empty, time conversion is complete, break out of loop
+            if shift['In'] == '':
                 break
-            elif item['In'][-1] != 'M':
-                continue
             else:
-                item['In'] = self.convert24(item['In'])
-                item['Out'] = self.convert24(item['Out'])
+                shift['In'] = self.convert_time_format(shift['In'], 24)
+                shift['Out'] = self.convert_time_format(shift['Out'], 24)
 
-        # sorts hd_input and scan_input dictionaries in order of name, then date, then start/clock-in time
-        hd_input = self.multi_key_sort(hd_input, ['Employee Name', 'Date', 'Start Time'])
-        scan_input = self.multi_key_sort(scan_input, ['Username', 'Date', 'In'])
+        # sorts hd_shifts and scan_shifts dictionaries in order of name, then date, then start/clock-in time
+        hd_shifts = self.multi_key_sort(hd_shifts, ['Employee Name', 'Date', 'Start Time'])
+        scan_shifts = self.multi_key_sort(scan_shifts, ['Username', 'Date', 'In'])
 
-        # determines what row of 'flagged_items' to update for a new flagged item, beginning at row 2
+        # determines what row of flagged_shifts to update for a new flagged item, beginning at row 2
         flag_count = 2
-        # tracks the correct row number for RFID time in and out, taking into account possible extra shifts
-        p = 0
+        # tracks the correct row number for scanner time in and out, taking into account possible extra shifts
+        # gets incremented at certain points in the for loop to keep n (row number for hd_export sheet) even with row
+        # number for scan_input
+        scan_row = 0
         # tracks the current part of the extra shift(s)
         shift_count = -1
 
-        self.reset_flagged()
+        # clear flagged_shifts sheet data prior to a new run-through of the shifts
+        self.reset_sheet_data(gsheet_flagged_shifts, 8)
 
-        # loops through all information in the hd_input and scan_input lists of dictionaries of shift info
-        for n in range(0, len(hd_input)):
+        # loops through all information in the hd_shifts and scan_shifts lists of dictionaries of shift info
+        for n in range(0, len(hd_shifts)):
             # if name value is empty, this ends the loop and all shifts have been documented
-            if hd_input[n]['Employee Name'] == 'zz - empty':
+            if hd_shifts[n]['Employee Name'] == 'zz - empty':
                 break
 
             # skips iterating over each shift of a student's multiple shifts in a row
@@ -276,66 +247,66 @@ class ShiftsController:
             shift_count = -1  # reset shift counter if this is the first shift in a row
 
             # sets variables for time in, start time, end time, and duration of the shift from info in hd export
-            time_in = datetime.strptime(scan_input[p]['Date']+scan_input[p]['In'], '%x%H:%M')
-            start_time = datetime.strptime(hd_input[n]['Date']+hd_input[n]['Start Time'], '%x%H:%M')
-            end_time = datetime.strptime(hd_input[n]['Date']+hd_input[n]['End Time'], '%x%H:%M')
+            time_in = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['In'], '%x%H:%M')
+            start_time = datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n]['Start Time'], '%x%H:%M')
+            end_time = datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
             # case: student clocks in and out when they were not scheduled for a shift at that time
             if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
                 if start_time - timedelta(minutes=10) <= \
-                        datetime.strptime(scan_input[p+1]['Date']+scan_input[p+1]['In'], '%x%H:%M') \
+                        datetime.strptime(scan_shifts[scan_row+1]['Date']+scan_shifts[scan_row+1]['In'], '%x%H:%M') \
                         <= start_time + timedelta(minutes=15):
-                    p += 1
-                    time_in = datetime.strptime(scan_input[p]['Date'] + scan_input[p]['In'], '%x%H:%M')
+                    scan_row += 1
+                    time_in = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['In'], '%x%H:%M')
 
             # case: student forgets to clock out (time out value is empty)
             # forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
-            if scan_input[p]['Out'] == '':
+            if scan_shifts[scan_row]['Out'] == '':
                 cause = 'Forgot to clock in or out'
-                # updates the flagged_items sheet with info about that shift
-                self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=False)
+                # updates the flagged_shifts sheet with info about that shift
+                self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=False)
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while end_time == datetime.strptime(hd_input[n]['Date']+hd_input[n+1]['Start Time'], '%x%H:%M') and \
-                        hd_input[n]['Employee Name'] == hd_input[n+1]['Employee Name']:
+                while end_time == datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n+1]['Start Time'], '%x%H:%M') and \
+                        hd_shifts[n]['Employee Name'] == hd_shifts[n+1]['Employee Name']:
                     n += 1
                     shift_count = n
-                    # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=False)
+                    # updates the flagged_shifts sheet with info about that shift
+                    self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=False)
                     flag_count += 1
 
-                p += 1
+                scan_row += 1
                 continue
 
             # case: student skips entire shift or forgets to clock in AND out
             if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=15):
                 cause = 'Skipped or forgot to clock shift'
-                # updates the flagged_items sheet with info about that shift
-                self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=True)
+                # updates the flagged_shifts sheet with info about that shift
+                self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=True)
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while hd_input[n]['Date'] == hd_input[n + 1]['Date'] and hd_input[n]['End Time'] == \
-                        hd_input[n + 1]['Start Time'] and hd_input[n]['Employee Name'] == \
-                        hd_input[n + 1]['Employee Name']:
+                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
+                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
+                        hd_shifts[n + 1]['Employee Name']:
                     n += 1
                     shift_count = n
-                    # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=True)
+                    # updates the flagged_shifts sheet with info about that shift
+                    self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=True)
                     flag_count += 1
                 continue
 
-            # sets variables for time out and duration of the shift from RFID entry in rfid_input
-            time_out = datetime.strptime(scan_input[p]['Date']+scan_input[p]['Out'], '%x%H:%M')
+            # sets variables for time out and duration of the shift from RFID entry in scan_input
+            time_out = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['Out'], '%x%H:%M')
             actual_duration = time_out - time_in
 
             # case: student works multiple shifts in a row
-            while hd_input[n]['Date'] == hd_input[n+1]['Date'] and hd_input[n]['End Time'] == \
-                    hd_input[n+1]['Start Time'] and hd_input[n]['Employee Name'] == hd_input[n+1]['Employee Name']:
+            while hd_shifts[n]['Date'] == hd_shifts[n+1]['Date'] and hd_shifts[n]['End Time'] == \
+                    hd_shifts[n+1]['Start Time'] and hd_shifts[n]['Employee Name'] == hd_shifts[n+1]['Employee Name']:
                 n += 1
-                end_time = datetime.strptime(hd_input[n]['Date']+hd_input[n]['End Time'], '%x%H:%M')
+                end_time = datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n]['End Time'], '%x%H:%M')
                 set_duration = end_time - start_time
                 actual_duration = time_out - time_in
                 shift_count = n
@@ -346,18 +317,19 @@ class ShiftsController:
                 # case: student is late
                 if time_in > start_time + timedelta(minutes=8):
                     cause = 'Late'
-                    # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=False)
+                    # updates the flagged_shifts sheet with info about that shift
+                    self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=False)
                     flag_count += 1
 
                 # case: student leaves early and/or has shorter shift than scheduled
                 else:
                     cause = 'Short shift'
-                    # updates the flagged_items sheet with info about that shift
-                    self.flagged_cells(hd_input, scan_input, n, p, flag_count, cause, skipped=False)
+                    # updates the flagged_shifts sheet with info about that shift
+                    self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=False)
                     flag_count += 1
 
-            p += 1
+            scan_row += 1
 
-        self.reset_scan_data()
-        return
+        # clears the collected data for the scan_input and hd_export sheets, respectively
+        # self.reset_sheet_data(gsheet_scan_input, 4)
+        # self.reset_sheet_data(gsheet_hd_export, 5)

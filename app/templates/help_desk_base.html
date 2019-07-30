@@ -1,46 +1,29 @@
 <!DOCTYPE html>
-
-{% block html_attribs %}
-    <html lang="en">
-{% endblock %}
-
-{% block html %}
+<html lang="en">
     <head>
-        {% block head %}
-            <meta charset="UTF-8">
-            <meta name="viewport"
-                  content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-            <meta http-equiv="X-UA-Compatible" content="ie=edge">
-            <title>Help Desk Time Clock</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Help Desk Time Clock</title>
 
-            <!-- Latest compiled and minified CSS -->
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
 
-            <!-- Help Desk Time Clock CSS -->
-            <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='hd_shifts.css') }}"/>
-        {% endblock %}
+        <!-- Help Desk Time Clock CSS -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='hd_shifts.css') }}"/>
     </head>
-
     <body>
-        {% block scripts %}
-            <!-- jQuery library -->
-            <script src="https://code.jquery.com/jquery-3.4.1.min.js"
-                integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-                crossorigin="anonymous"></script>
+        <!-- jQuery library -->
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 
-            <!-- Latest compiled Javascript -->
-            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-        {% endblock %}
+        <!-- Latest compiled Javascript -->
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
         {% block nav%}{% include 'nav.html' %}{% endblock %}
 
-        <div class="nav margins">{% block subnav %}{% endblock %}</div>
-
-        <div class="wc-margins">{% block body_content %}{% endblock %}</div>
+        <div class="body-margins">{% block body_content %}{% endblock %}</div>
 
         <!-- Help Desk Time Clock JS -->
         <script type="text/javascript" src="{{ url_for('static', filename='shift_buttons.js') }}"></script>
     </body>
-{% endblock %}
-
 </html>

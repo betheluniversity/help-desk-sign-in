@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark background-blue">
     <a class="navbar-brand">
         <img height="48" src="https://confluence.bethel.edu/download/attachments/327682/global.logo?version=4&amp;modificationDate=1462424762000&amp;api=v2">
-        <span class="ml-2 h6 lab-title">Help Desk Time Clock</span>
+        <span class="ml-2 h6 site-title">Help Desk Time Clock</span>
     </a>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -13,7 +13,7 @@
                 <a id="full time staff" class="nav-link button {{ 'nav-bar-active' if 'ShiftsView:full_time_staff_index' in request.url_rule.endpoint }}" href="{{ url_for('ShiftsView:full_time_staff_index') }}">Full-Time Staff</a>
             </li>
             <li class="nav-item">
-                <a id="users" class="nav-link button {{ 'nav-bar-active' if 'ShiftsView:users_index' in request.url_rule.endpoint }}" href="{{ url_for('ShiftsView:users_index') }}">Users</a>
+                <a id="users" class="nav-link button {{ 'nav-bar-active' if 'ShiftsView:how_to' in request.url_rule.endpoint }}" href="{{ url_for('ShiftsView:how_to') }}">Help</a>
             </li>
         </ul>
     </div>

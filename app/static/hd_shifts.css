@@ -1,17 +1,9 @@
-a.btn.btn-primary.sign-out {
-    margin: 0;
-}
-
 .active {
     max-height: 30px;
     background-color: #0F2C52;
     color: white !important;
     border-radius: 6px;
     padding: 3px 16px
-}
-
-a.dashboard-link{
-    text-decoration: none;
 }
 
 a.nav-link.button {
@@ -44,76 +36,71 @@ body {
     cursor: auto;
 }
 
+.body-margins {
+    width: 100%;
+    margin: 20px auto;
+    max-width: 95%;
+}
+
+.btn {
+    margin: 5px 0;
+}
+
 .btn-primary {
     background-color: #005eb2;
     border: 1px solid #0053b2;
     color: #fff;
 }
-div.card.info.help-page {
-    margin-bottom: 10px;
+
+div.alert {
+    margin: 0;
+    padding: 10px;
+}
+
+div.card-body {
+    padding: 10px
 }
 
 div.centered {
     text-align:center;
 }
 
-div.dashboard-card{
-    background-color: #f2f2f2;
-    border-color: #d8d8d8;
-    margin-bottom: 10px;
-}
-
-div.dashboard-info{
-    background-color: #f2f2f2;
-    border-color: #d8d8d8;
-    margin-top: 10px;
-}
-
-div.form-group.col-md-6, #add-user-row {
-    margin-bottom: 12px;
-    padding: 0 5px;
+div.col-sm-12 {
+    padding: 8px;
 }
 
 html, body {
     background-color: #fafafa;
 }
 
-.margins {
-    width: 100%;
-    margin: 20px auto;
-    max-width: 70rem;
-}
-
 .navbar {
     padding: 1em 2em !important;
 }
 
-.nav.margins {
-    padding: 0 2em;
-}
-
-nav.navbar{
-    padding: 0 10px;
-}
-
-span.lab-title{
+span.site-title {
     color: #ffc600
+}
+
+.spinner {
+    top: 50%;
+    left: 50%;
+    margin: 0 auto;
+    text-align: center;
+    z-index: 1234;
+    overflow: auto;
+}
+
+.spinner-img {
+    position: fixed;
+    margin-left: -60px;
+    width: 120px;
+    height: auto;
 }
 
 .staff {
     margin-right: 15px;
 }
 
-.staff-row {
-    margin: 0;
-}
-
 #title-bar {
     margin: 0 0 12px;
-}
-
-.wc-margins {
-    width: 100%;
-    margin: 20px auto;
-    max-width: 95%;
 }
