@@ -34,19 +34,6 @@ gsheet_hd_users = spreadsheet.worksheet('hd_users')
 
 
 class ShiftsController:
-    def __init__(self):
-        # initializing sheet objects and lists for reading and writing from Google Sheets
-        # variables with '.get_all.records()' are lists of dictionaries from their respective sheets
-        self.flagged = gsheet_flagged_shifts.get_all_records()
-        # a list of dicts of info gathered from scan_input sheet
-        self.input = gsheet_scan_input.get_all_records()
-        # a list of dicts of info gathered from current_day sheet
-        self.today = gsheet_current_day.get_all_records()
-        # a list of dicts of info gathered from hd_export sheet
-        self.export = gsheet_hd_export.get_all_records()
-        # a list of dicts of info gathered from hd_users sheet
-        self.users = gsheet_hd_users.get_all_records()
-
     # enters clock ins and outs into scan_input sheet
     # card id: 5-digit ID on Bethel IDs used to identify users
     def student_time_clock(self, card_id):
@@ -117,6 +104,9 @@ class ShiftsController:
     def day_list(self):
         return gsheet_current_day.get_all_records()
 
+    def hd_list(self):
+        return gsheet_hd_export.get_all_records()
+
     # compares keys in a list of dictionaries to sort in ascending or descending order
     # items: the list of dictionaries
     # columns: the keys being sorted, in order of desired sort
@@ -150,7 +140,7 @@ class ShiftsController:
             d = datetime.strptime(convert_time, '%I:%M %p')
             return d.strftime('%H:%M')
         # converts a time-string to 12-hour format for easier readability
-        else:  # format == 12
+        else:  # time_format == 12
             d = datetime.strptime(convert_time, '%H:%M')
             return d.strftime('%-I:%M %p')
 
@@ -160,7 +150,7 @@ class ShiftsController:
     def reset_sheet_data(self, sheet, cols):
         # cell_reset sets the range of rows to clear between row 2 and row len(sheet.get_all_records())+1
         # len(sheet.get_all_records())+1 = length of the specified sheet (# of rows with values in cell(s)) + 1
-        cell_reset = sheet.range(2, 1, len(sheet.get_all_records())+1, cols)
+        cell_reset = sheet.range(2, 1, 1000, cols)
         for cell in cell_reset:
             cell.value = ''
         sheet.update_cells(cell_reset)
@@ -194,7 +184,14 @@ class ShiftsController:
     # runs the comparison between hd_export and scan_input to determine "bad" shifts
     # hd_shifts: list of dictionaries of shifts gathered from hd_export sheet
     # scan_shifts: list of dictionaries of shifts gathered from scan_input sheet
-    def shift_generator(self, hd_shifts, scan_shifts):
+    def shift_processor(self):
+        # refreshes the list of dictionaries of hd_export, scan_input, and hd_users, respectively
+        # these 3 sheets from the Google Sheet are called in this way to minimize the number of read requests to the
+        # Google Sheets API and not exceed their limit of 100 read requests per 100 seconds
+        hd_shifts = self.hd_list()
+        scan_shifts = self.shifts_list()
+        hd_users = self.users_list()
+
         # converts times in hd_shifts to 24-hour format and sorts out empty shifts
         for shift in hd_shifts:
             # empty shifts set as 'zz - empty' to ensure they are at the bottom of the alphabetical sort
@@ -202,6 +199,8 @@ class ShiftsController:
             # sort and the method does not run properly if the empty shifts are at the front of the list of dictionaries
             if shift['Employee Name'] == '':
                 shift['Employee Name'] = 'zz - empty'
+            if shift['Start Time'][-1] != 'M':
+                break
             shift['Start Time'] = self.convert_time_format(shift['Start Time'], 24)
             shift['End Time'] = self.convert_time_format(shift['End Time'], 24)
 
@@ -209,11 +208,12 @@ class ShiftsController:
         for shift in scan_shifts:
             # searches through list of users to change the username category in the shifts list into full names
             # user-names are temporarily converted to full names for alphabetical sorting
-            for user in self.users_list():
+            for user in hd_users:
                 if shift['Username'] == user['Username']:
                     shift['Username'] = user['Name']
+
             # if time-in is empty, time conversion is complete, break out of loop
-            if shift['In'] == '':
+            if shift['In'] == '' or shift['In'][-1] != 'M':
                 break
             else:
                 shift['In'] = self.convert_time_format(shift['In'], 24)

@@ -34,8 +34,8 @@ class ShiftsView(FlaskView):
             card_id = int(scan[2:-2])
             # self.sc.student_time_clock(card_id)
             self.sc.student_shifts_today(card_id)
-            # the code below is repeated from the index method in order to refresh and search through the lists of
-            # users and shifts for that day
+            # the code below is repeated from the index method in order to refresh and search through the lists of users
+            # and shifts for that day
             users_list = self.sc.users_list()
             shifts_list = self.sc.day_list()
             for shift in shifts_list:
@@ -53,9 +53,9 @@ class ShiftsView(FlaskView):
         # self.sc.check_roles_and_route(['Administrator'])
         return render_template('staff_index.html', **locals())
 
-    @route('/generate_shifts', methods=['POST'])
-    def generate_shifts(self):
-        self.sc.shift_generator(self.sc.export, self.sc.input)
+    @route('/process_shifts', methods=['POST'])
+    def process_shifts(self):
+        self.sc.shift_processor()
         return render_template('staff_index.html', **locals())
 
     # USERS #
