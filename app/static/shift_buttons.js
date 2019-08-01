@@ -2,11 +2,17 @@ $(document).ready(function() {
     // Clicking the Process Shift Data button displays a loading GIF, triggers the shift_processor method in
     // shifts_controller.py, and returns an alert with the result of the method (success / failure & why)
     $("#process-shifts").click(function() {
+        $('#resource-exhausted').hide();
+        $('.alert-success').hide();
         $('#spinner').show();
         let input_data = {};
-        $.post('/process_shifts', input_data, function() {
+        $.post('/process_shifts', input_data, function(output_data) {
             $('#spinner').hide();
-            $('.alert').show();
+            if (output_data != 'resource exhausted') {
+                $('.alert-success').show();
+            } else {
+                $('#resource-exhausted').show();
+            }
         });
     });
 
@@ -16,18 +22,21 @@ $(document).ready(function() {
     let input = "";
     $(document).on('keydown', function (key) {
         if (key.keyCode == 13) {
-            $('#failed-alert').hide();
+            $('#failed-time-clock').hide();
+            $('#resource-exhausted').hide();
             $('#spinner').show();
             let scanned_input = {
                 'scan': input
             };
             $.post('/verify_scanner', scanned_input, function (success) {
                 $('#spinner').hide();
-                if (success != 'failed') {
+                if (success != 'failed' && success != 'resource exhausted') {
                     $("#student-tbody").html(success);
                     input = "";
+                } else if (success != 'failed') {
+                    $('#resource-exhausted').show();
                 } else {
-                    $('#failed-alert').show();
+                    $('#failed-time-clock').show();
                     input = "";
                 }
             });

@@ -33,7 +33,7 @@ class ShiftsView(FlaskView):
         if scan_success and len(scan[2:-2]) == 5:
             card_id = int(scan[2:-2])
             # self.sc.student_time_clock(card_id)
-            self.sc.student_shifts_today(card_id)
+            self.sc.student_time_clock(card_id)
             # the code below is repeated from the index method in order to refresh and search through the lists of users
             # and shifts for that day
             users_list = self.sc.users_list()
@@ -56,7 +56,11 @@ class ShiftsView(FlaskView):
     @route('/process_shifts', methods=['POST'])
     def process_shifts(self):
         self.sc.shift_processor()
-        return render_template('staff_index.html', **locals())
+        if self.sc.shift_processor() == 'resource exhausted':
+            return 'resource exhausted'
+        else:
+            return 'still going'
+        # return render_template('staff_index.html', **locals())
 
     # USERS #
 
