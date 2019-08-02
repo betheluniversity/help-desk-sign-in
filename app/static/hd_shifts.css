@@ -6,6 +6,11 @@
     padding: 3px 16px
 }
 
+.alert {
+    margin: 0;
+    padding: 10px;
+}
+
 a.nav-link.button {
     color: #fff !important;
 }
@@ -50,11 +55,6 @@ body {
     background-color: #005eb2;
     border: 1px solid #0053b2;
     color: #fff;
-}
-
-.alert {
-    margin: 0;
-    padding: 10px;
 }
 
 div.card-body {

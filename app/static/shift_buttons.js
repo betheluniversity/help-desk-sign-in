@@ -3,13 +3,13 @@ $(document).ready(function() {
     // shifts_controller.py, and returns an alert with the result of the method (success / failure & why)
     $("#process-shifts").click(function() {
         $('#resource-exhausted').hide();
-        $('.alert-success').hide();
+        $('#processing-complete').hide();
         $('#spinner').show();
         let input_data = {};
         $.post('/process_shifts', input_data, function(output_data) {
             $('#spinner').hide();
             if (output_data != 'resource exhausted') {
-                $('.alert-success').show();
+                $('#processing-complete').show();
             } else {
                 $('#resource-exhausted').show();
             }
@@ -22,8 +22,7 @@ $(document).ready(function() {
     let input = "";
     $(document).on('keydown', function (key) {
         if (key.keyCode == 13) {
-            $('#failed-time-clock').hide();
-            $('#resource-exhausted').hide();
+            $('#time-clock-fail').hide();
             $('#spinner').show();
             let scanned_input = {
                 'scan': input
@@ -31,14 +30,14 @@ $(document).ready(function() {
             $.post('/verify_scanner', scanned_input, function (success) {
                 $('#spinner').hide();
                 if (success != 'failed' && success != 'resource exhausted') {
+                    $("#time-clock-success").fadeTo(2000, 500).slideUp(500, function(){
+                        $("#time-clock-success").slideUp(500);
+                    });
                     $("#student-tbody").html(success);
-                    input = "";
-                } else if (success != 'failed') {
-                    $('#resource-exhausted').show();
                 } else {
-                    $('#failed-time-clock').show();
-                    input = "";
+                    $('#time-clock-fail').show();
                 }
+                input = "";
             });
         } else {
             input = input + key.key;
