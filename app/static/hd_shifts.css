@@ -6,7 +6,7 @@
     padding: 3px 16px
 }
 
-.alert, h6 {
+.alert, #alert {
     margin: 0;
 }
 
@@ -77,6 +77,10 @@ html, body {
     padding: 1em 2em !important;
 }
 
+p {
+    margin-bottom: 8px;
+}
+
 span.site-title {
     color: #ffc600
 }
@@ -95,10 +99,6 @@ span.site-title {
     margin-left: -60px;
     width: 120px;
     height: auto;
-}
-
-.staff {
-    margin-right: 15px;
 }
 
 #title-bar {

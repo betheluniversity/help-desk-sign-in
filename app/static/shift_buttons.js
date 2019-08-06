@@ -4,10 +4,10 @@ $(document).ready(function() {
     $("#process-shifts").click(function() {
         $('#resource-exhausted').hide();
         $('#processing-complete').hide();
-        $('#spinner').show();
+        $('.spinner').show();
         let input_data = {};
         $.post('/process_shifts', input_data, function(output_data) {
-            $('#spinner').hide();
+            $('.spinner').hide();
             if (output_data != 'resource exhausted') {
                 $('#processing-complete').show();
             } else {
@@ -24,19 +24,18 @@ $(document).ready(function() {
         if (key.keyCode == 13) {
             $('#time-clock-fail').hide();
             $('#resource-exhausted').hide();
-            $('#spinner').show();
+            $('.spinner').show();
             let scanned_input = {
                 'scan': input
             };
             $.post('/verify_scanner', scanned_input, function (success) {
-                $('#spinner').hide();
+                $('.spinner').hide();
                 if (success != 'failed' && success != 'resource exhausted') {
-                    $("#time-clock-success").fadeTo(2000, 500).slideUp(500, function() {
-                        $("#time-clock-success").slideUp(500);
-                    });
                     $("#student-tbody").html(success);
                 } else if (success == 'failed') {
-                    $('#time-clock-fail').show();
+                    $('#time-clock-fail').fadeTo(2000, 500).slideUp(500, function() {
+                        $("#time-clock-fail").slideUp(500);
+                    });
                 } else {
                     $('#resource-exhausted').show();
                 }

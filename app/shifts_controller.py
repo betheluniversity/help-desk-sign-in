@@ -242,7 +242,15 @@ class ShiftsController:
             end_time = datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
-            # case: student clocks in and out when they were not scheduled for a shift at that time
+            # case: student quickly signs in and out (within 10 minutes of each other), ignoring it as no shift
+            # i.e. possible accidental sign in and out
+            while scan_shifts[scan_row]['Out'] != '' and \
+                    datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['Out'], '%x%H:%M') - \
+                    timedelta(minutes=10) <= time_in:
+                scan_row += 1
+                time_in = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['In'], '%x%H:%M')
+
+            # case: student clocks in when they were not scheduled for a shift at that time
             # checks if the clock in is not within 60 minutes in either direction of the scheduled shift start time
             # if so, it checks if the next scanned sign-in in the list matches the shift being compared to
             # if this matches, it counts the original scanned sign-in as a shift they were not assigned to
@@ -253,14 +261,6 @@ class ShiftsController:
                     scan_row += 1
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
-
-            # case: student quickly signs in and out (within 10 minutes of each other), ignoring it as no shift
-            # i.e. possible accidental sign in and out
-            while scan_shifts[scan_row]['Out'] != '' and \
-                    datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['Out'], '%x%H:%M') - \
-                    timedelta(minutes=10) <= time_in:
-                scan_row += 1
-                time_in = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['In'], '%x%H:%M')
 
             # case: student forgets to clock out (time out value is empty)
             # forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out

@@ -27,12 +27,4 @@ the shift should not be clocked by a student.
 Students do not need to clock in and out for each shift if they are working multiple shifts in a row. They just need to
 clock in when they arrive and clock out when they leave.
 
-Tasks still TODO:
-* Clearing shifts per day on the front end (table on 'Student Employees' clears with each new day to only display that
-day's shifts), but shifts do not clear from 'scan_input' sheet in the Google Spreadsheet
-* Comparing usernames in scan_input with usernames in hd_users to associate a shift to a name in the long for-loop of
-'shifts_controller.py'
-* Try/catch around common errors, such as APIError, to catch them and send Bootstrap alerts
-* Import sentry into the init file to capture error messages automatically
-* Other minor edits from PR #1 and other small issues to fix up
-* Testing
+Other details about how this project works can be found in the 'help.html' file.
