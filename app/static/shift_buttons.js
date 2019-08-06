@@ -20,9 +20,10 @@ $(document).ready(function() {
     // method in shifts_controller.py, where it logs the time in/out and returns from views.py as a POST. Along with a
     // loading GIF, the time in/out is appended to the table in student_table.html
     let input = "";
-    $(document).on('keydown', function (key) {
+    $(document).on('keydown', function(key) {
         if (key.keyCode == 13) {
             $('#time-clock-fail').hide();
+            $('#resource-exhausted').hide();
             $('#spinner').show();
             let scanned_input = {
                 'scan': input
@@ -30,12 +31,14 @@ $(document).ready(function() {
             $.post('/verify_scanner', scanned_input, function (success) {
                 $('#spinner').hide();
                 if (success != 'failed' && success != 'resource exhausted') {
-                    $("#time-clock-success").fadeTo(2000, 500).slideUp(500, function(){
+                    $("#time-clock-success").fadeTo(2000, 500).slideUp(500, function() {
                         $("#time-clock-success").slideUp(500);
                     });
                     $("#student-tbody").html(success);
-                } else {
+                } else if (success == 'failed') {
                     $('#time-clock-fail').show();
+                } else {
+                    $('#resource-exhausted').show();
                 }
                 input = "";
             });

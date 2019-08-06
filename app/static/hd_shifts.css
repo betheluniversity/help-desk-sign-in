@@ -6,9 +6,8 @@
     padding: 3px 16px
 }
 
-.alert {
+.alert, h6 {
     margin: 0;
-    padding: 10px;
 }
 
 a.nav-link.button {
@@ -49,6 +48,7 @@ body {
 
 .btn {
     margin: 5px 0;
+    width: 200px;
 }
 
 .btn-primary {

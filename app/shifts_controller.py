@@ -1,6 +1,5 @@
 # Global
 import gspread
-from gspread.exceptions import APIError
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Packages
@@ -63,23 +62,29 @@ class ShiftsController:
                                                             shifts_list.index(shift) + 2, 4)
                         cell_list[3].value = current_time
                         gsheet_scan_input.update_cells(cell_list)
+                        # if there is not a return here, the code below executes and thus, when a clock out occurs, it
+                        # is logged as both a clock out and a new clock in if this return does not exist
+                        return 'scan success'
                 # cell_list[number].value sets a cell to a value, with number = column number in the Google Sheet range
                 cell_list[0].value = user['Username']  # sets username
                 cell_list[1].value = date  # sets date
                 cell_list[2].value = current_time  # sets time in as current time
                 gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
-                
-    # the __init__ method at the top refreshes the list of dictionaries only at the start of running the program
-    # the 3 methods below refresh the necessary list of sheets called by the methods for the time clock and add users
-    # refreshes the list of dictionaries of the hd_users sheet, allowing the users page to be up to date
-    def users_list(self):
-        return gsheet_hd_users.get_all_records()
+
+    # the 3 methods below refresh the necessary list of sheets called by student_time_clock and shift_processor
+    # refreshes the list of dictionaries of the hd_export sheet, allowing the schedule to be up to date
+    def hd_list(self):
+        return gsheet_hd_export.get_all_records()
 
     # refreshes the list of dictionaries of the scan_input sheet, allowing the total list of shifts to be up to date
     def shifts_list(self):
         return gsheet_scan_input.get_all_records()
 
-    # refreshes the list of dictionaries of the current_day sheet, allowing the student page to be up to date
+    # refreshes the list of dictionaries of the hd_users sheet, allowing the users page to be up to date
+    def users_list(self):
+        return gsheet_hd_users.get_all_records()
+
+    # appends any existing shift from the scan_input sheet on the current day to a list that displays on the main page
     def day_list(self):
         timestamp = datetime.now()
         date = timestamp.strftime('%x')
@@ -90,9 +95,6 @@ class ShiftsController:
                 day_list.append(shift)
         day_list.reverse()
         return day_list
-
-    def hd_list(self):
-        return gsheet_hd_export.get_all_records()
 
     # compares keys in a list of dictionaries to sort in ascending or descending order
     # items: the list of dictionaries
@@ -179,14 +181,11 @@ class ShiftsController:
         scan_shifts = self.shifts_list()
         hd_users = self.users_list()
 
+        # searches through hd_shifts and removes all empty shifts from the list of dictionaries
+        hd_shifts = [shift for shift in hd_shifts if not shift['Employee Name'] == '']
+
         # converts times in hd_shifts to 24-hour format and sorts out empty shifts
         for shift in hd_shifts:
-            # empty shifts set as 'zz - empty' to ensure they are at the bottom of the alphabetical sort
-            # note: setting empty shifts as a string of symbols/numbers places them at the front of the alphabetical
-            # sort and the method does not run properly if the empty shifts are at the front of the list of
-            # dictionaries
-            if shift['Employee Name'] == '':
-                shift['Employee Name'] = 'zz - empty'
             if shift['Start Time'][-1] != 'M':
                 break
             shift['Start Time'] = self.convert_time_format(shift['Start Time'], 24)
@@ -199,13 +198,11 @@ class ShiftsController:
             for user in hd_users:
                 if shift['Username'] == user['Username']:
                     shift['Username'] = user['Name']
-
             # if time-in is empty, time conversion is complete, break out of loop
             if shift['In'] == '' or shift['In'][-1] != 'M':
                 break
-            else:
-                shift['In'] = self.convert_time_format(shift['In'], 24)
-                shift['Out'] = self.convert_time_format(shift['Out'], 24)
+            shift['In'] = self.convert_time_format(shift['In'], 24)
+            shift['Out'] = self.convert_time_format(shift['Out'], 24)
 
         # sorts hd_shifts and scan_shifts dictionaries in order of name, then date, then start/clock-in time
         hd_shifts = self.multi_key_sort(hd_shifts, ['Employee Name', 'Date', 'Start Time'])
@@ -223,10 +220,15 @@ class ShiftsController:
         # clear flagged_shifts sheet data prior to a new run-through of the shifts
         self.reset_sheet_data(gsheet_flagged_shifts, 8)
 
+        # appends an empty shift onto the end of the hd_export list of dictionaries because otherwise, the method cannot
+        # check for multiple shifts (i.e. checking hd_shifts[n+1] would lead to IndexError out of bounds without this)
+        hd_shifts.insert(len(hd_shifts),
+                         {'Shift ID': '', 'Date': '', 'Start Time': '', 'End Time': '', 'Employee Name': ''})
+
         # loops through all information in the hd_shifts and scan_shifts lists of dictionaries of shift info
         for n in range(0, len(hd_shifts)):
-            # if name value is empty, this ends the loop and all shifts have been documented
-            if hd_shifts[n]['Employee Name'] == 'zz - empty':
+            # this ends the loop once all shifts have been documented
+            if hd_shifts[n]['Employee Name'] == '':
                 break
 
             # skips iterating over each shift of a student's multiple shifts in a row
@@ -241,6 +243,9 @@ class ShiftsController:
             set_duration = end_time - start_time
 
             # case: student clocks in and out when they were not scheduled for a shift at that time
+            # checks if the clock in is not within 60 minutes in either direction of the scheduled shift start time
+            # if so, it checks if the next scanned sign-in in the list matches the shift being compared to
+            # if this matches, it counts the original scanned sign-in as a shift they were not assigned to
             if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
                 if start_time - timedelta(minutes=10) <= \
                         datetime.strptime(scan_shifts[scan_row+1]['Date']+scan_shifts[scan_row+1]['In'], '%x%H:%M')\
@@ -248,6 +253,14 @@ class ShiftsController:
                     scan_row += 1
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
+
+            # case: student quickly signs in and out (within 10 minutes of each other), ignoring it as no shift
+            # i.e. possible accidental sign in and out
+            while scan_shifts[scan_row]['Out'] != '' and \
+                    datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['Out'], '%x%H:%M') - \
+                    timedelta(minutes=10) <= time_in:
+                scan_row += 1
+                time_in = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['In'], '%x%H:%M')
 
             # case: student forgets to clock out (time out value is empty)
             # forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
@@ -270,7 +283,7 @@ class ShiftsController:
                 continue
 
             # case: student skips entire shift or forgets to clock in AND out
-            if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=15):
+            if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=20):
                 cause = 'Skipped or forgot to clock shift'
                 # updates the flagged_shifts sheet with info about that shift
                 self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=True)
