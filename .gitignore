@@ -1,0 +1,5 @@
+*.pyc
+.idea*
+config.py
+client_secret.json
+.DS_Store

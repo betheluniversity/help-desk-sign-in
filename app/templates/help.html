@@ -1,0 +1,80 @@
+{% extends 'help_desk_base.html' %}
+
+{% block body_content %}
+    <div class="centered">
+        <h3 id="title-bar">Help-Desk Manager FAQ</h3>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-body">
+              <h5><u>Student Employees Tab</u></h5>
+              <h6>How do the students clock in and out and where is the information stored?</h6>
+              <p>
+                  Students can clock in and out of their shifts by scanning their Bethel ID cards on the RFID scanner at the Help Desk.
+                  When a student clocks in or out, their card ID matches with their user info from the 'hd_users' sheet in the Google Sheet.
+                  Upon matching, the timestamp is recorded as either a clock in or out and is sent to the 'scan_input' sheet as well as displayed on the home page of the site.
+                  The 'Student Employees' tab (home page) of the site displays the current day's recorded shifts from the full list of shifts.
+                  All other shifts remain in the 'scan_input' sheet out of the students' view.
+              </p>
+          </div>
+          <div class="card-body">
+              <h5><u>Full-Time Staff Tab</u></h5>
+              <h6>What is a "bad" shift?</h6>
+                  <p>
+                      A "bad" shift is a shift that is caught by the program as one of the following problem-cases:
+                  </p>
+                  <ul>
+                      <li>Student is 8 or more minutes late to their shift.</li>
+                      <li>Student's shift duration is 8 or more minutes less than the scheduled shift duration (i.e. student stays for 1 hour, 51 minutes or less of a 2 hour shift)</li>
+                      <li>
+                          Student forgets to clock out of their shift. If the student forgets to clock in, but clocks out, such action will be treated as a successful clock in and a missed clock out and marked the same.
+                          This is treated as "bad" because it is unknown when they left their shift if there is not data from both the clock in and clock out times.
+                      </li>
+                      <li>Student skips their shift or forgets to clock their shift entirely. Forgetting to clock the shift entirely means the student forgot to clock in <u>and</u> out.</li>
+                  </ul>
+              <h6>What do I need to do before clicking the "Process Shift Data" button?</h6>
+                  <p>
+                      The list of student employees and their corresponding user information must be up to date in the 'hd_users' sheet.
+                      Information required for each students includes their Bethel username, their full name, and the 5-digit card ID on the back of their Bethel ID cards.
+                      The card ID is upside-down in the top-middle of the card, above the magnetic strip.
+                  </p>
+                  <p>The date range must match between the lists of shifts in the 'hd_export' and 'scan_input' sheets of the Google Sheet.</p>
+                  <ul>
+                      <li>The beginning date of this range <u>must be the same</u> for the button to run properly, however, the end date between the two sheets does not need to be the same.</li>
+                      <li>If the end date for 'hd_export' is later than 'scan_input', all shifts for those later dates in 'hd_export' will be marked as missed shifts and will appear in the 'flagged_shifts' sheet.</li>
+                      <li>
+                          If the end date for 'scan_input' is later than 'hd_export', all shifts for those later dates in 'scan_input' will be ignored by the program and not marked as anything.
+                          The program only searches through the date range of 'hd_export'.
+                      </li>
+                      <li>
+                          The 'hd_export' and 'scan_input' sheets clear all data when the program runs. Thus, if scan_input contains data beyond that of the range of 'hd_export', it will be lost when the button is clicked.
+                          Make sure to copy or save the shifts in 'scan_input' that run past the end date of 'hd_export' before clicking the button if this is the case.
+                      </li>
+                  </ul>
+              <h6>What happens when I click the "Process Shift Data" button?</h6>
+                  <ul>
+                      <li>The program gathers and compares shift data from the 'hd_export' and 'scan_input' sheets, recording when a "bad" shift occurs during the comparison.</li>
+                      <li>
+                          All "bad" shifts are logged into the 'flagged_shifts' sheet of the Google Sheet. Once the site gives you an alert that the program has completed,
+                          follow the "Flagged Shifts" button to open the 'flagged_shifts' sheet in a new tab. If there is a long list in a row of shifts with empty 'In' and 'Out' values and the issue is labeled as
+                          'Forgot to clock in or out', there may be an issue with the comparison between 'hd_export' and 'scan_input'. Ensure that the time frame being compared between the two is the same and if the problem
+                          persists, contact the Web team.
+                      </li>
+                      <li>
+                          The 'flagged_shifts' sheet clears prior to the running of the program, posting only new data to the sheet.
+                          The 'hd_export' and 'scan_input' sheets clear following the running of the program to begin recording new data.
+                      </li>
+                  </ul>
+              <h6>What does the "server exhausted" error message mean?</h6>
+                <p>
+                    The "server exhausted" error occurs when the Google Sheet receives too many requests in a short time to receive or send data between one of the sheets and the code in the program.
+                    This error can occur at three instances on the site: running the "Process Shift Data" program, scanning IDs to clock in or out of shifts, and accessing the home page with the table of student shifts for the day.
+                    While the error is unlikely to occur during normal use, when the error appears, waiting 60 seconds or so and refreshing the page will typically solve the problem.
+                    If the error continues appearing, wait another minute and it should fix itself. If the problem persists, contact the Web team.
+                </p>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}

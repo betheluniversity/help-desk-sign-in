@@ -1,0 +1,44 @@
+{% extends 'help_desk_base.html' %}
+
+{% block body_content %}
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-body">
+            <input type="button" class="btn btn-success" id="process-shifts" value="Process Shift Data">
+            <p class="card-text">Processes through all shifts and posts the "bad" shifts, such as being late or leaving early, in the 'flagged_items' sheet of the Google Sheet.</p>
+          </div>
+          <div class="alert alert-success alert-dismissible" id="processing-complete" style="display: none;">
+            <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times</button>
+            <h6 id="alert">Shift data processing complete</h6>
+          </div>
+          <h6 class="alert alert-danger" id="resource-exhausted" style="display: none;">Error: server exhausted. Please wait 1 minute and try again.</h6>
+          <div class="spinner" style="display: none;">
+            <img id="img-spinner" class="spinner-img" src="https://cdn1.bethel.edu/images/load.gif" alt="Loading"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-body">
+            <a class="btn btn-warning" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit?usp=sharing" target="_blank">Flagged Shifts</a>
+            <p class="card-text">Opens a link in a new tab to the collected data of "bad" shifts after clicking the "Process Shift Data" button and running the program.</p>
+          </div>
+          <div class="card-body">
+            <a class="btn btn-primary" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=2051794733" target="_blank">Help Desk Schedule</a>
+            <p class="card-text">Opens a link in a new tab to the sheet of manager-exported Help Desk shifts in the Google Sheet.</p>
+          </div>
+          <div class="card-body">
+            <a class="btn btn-primary" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=51470580" target="_blank">Scanner Data</a>
+            <p class="card-text">Opens a link in a new tab to the collected data of scanner input since the last time the "Process Shift Data" program was run.</p>
+          </div>
+          <div class="card-body">
+            <a class="btn btn-primary" href="https://docs.google.com/spreadsheets/d/1C-wenU3zhy2AhZKr117dtig98Xa3ftkA1GzRqIZ7Dig/edit#gid=848779641" target="_blank">Student Employees</a>
+            <p class="card-text">Opens a link in a new tab to the sheet of student employees and their card IDs in the Google Sheet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
