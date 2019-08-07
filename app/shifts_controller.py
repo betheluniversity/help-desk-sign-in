@@ -57,7 +57,7 @@ class ShiftsController:
                     # shifts_list.index(shift) + 2
                     # shifts_list.index(shift) = the index of that user's original clock-in
                     # len(shifts_list) is not used so the clock-out is not appended to a new row
-                    if shift['Username'] == user['Username'] and shift['Out'] == '' and shift['Date'] == date:
+                    if shift['Name'] == user['Name'] and shift['Out'] == '' and shift['Date'] == date:
                         cell_list = gsheet_scan_input.range(shifts_list.index(shift) + 2, 1,
                                                             shifts_list.index(shift) + 2, 4)
                         cell_list[3].value = current_time
@@ -66,7 +66,7 @@ class ShiftsController:
                         # is logged as both a clock out and a new clock in if this return does not exist
                         return 'scan success'
                 # cell_list[number].value sets a cell to a value, with number = column number in the Google Sheet range
-                cell_list[0].value = user['Username']  # sets username
+                cell_list[0].value = user['Name']  # sets username
                 cell_list[1].value = date  # sets date
                 cell_list[2].value = current_time  # sets time in as current time
                 gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
@@ -184,7 +184,7 @@ class ShiftsController:
         # searches through hd_shifts and removes all empty shifts from the list of dictionaries
         hd_shifts = [shift for shift in hd_shifts if not shift['Employee Name'] == '']
 
-        # converts times in hd_shifts to 24-hour format and sorts out empty shifts
+        # converts times in hd_shifts to 24-hour format
         for shift in hd_shifts:
             if shift['Start Time'][-1] != 'M':
                 break
@@ -193,11 +193,6 @@ class ShiftsController:
 
         # converts times in scan_shifts to 24-hour format and user-names into full names
         for shift in scan_shifts:
-            # searches through list of users to change the username category in the shifts list into full names
-            # user-names are temporarily converted to full names for alphabetical sorting
-            for user in hd_users:
-                if shift['Username'] == user['Username']:
-                    shift['Username'] = user['Name']
             # if time-in is empty, time conversion is complete, break out of loop
             if shift['In'] == '' or shift['In'][-1] != 'M':
                 break
@@ -206,7 +201,7 @@ class ShiftsController:
 
         # sorts hd_shifts and scan_shifts dictionaries in order of name, then date, then start/clock-in time
         hd_shifts = self.multi_key_sort(hd_shifts, ['Employee Name', 'Date', 'Start Time'])
-        scan_shifts = self.multi_key_sort(scan_shifts, ['Username', 'Date', 'In'])
+        scan_shifts = self.multi_key_sort(scan_shifts, ['Name', 'Date', 'In'])
 
         # determines what row of flagged_shifts to update for a new flagged item, beginning at row 2
         flag_count = 2
