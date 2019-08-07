@@ -139,7 +139,7 @@ class ShiftsController:
     def reset_sheet_data(self, sheet, cols):
         # cell_reset sets the range of rows to clear between row 2 and row len(sheet.get_all_records())+1
         # len(sheet.get_all_records())+1 = length of the specified sheet (# of rows with values in cell(s)) + 1
-        cell_reset = sheet.range(2, 1, 1000, cols)
+        cell_reset = sheet.range(2, 1, len(sheet.get_all_records()) + 1, cols)
         for cell in cell_reset:
             cell.value = ''
         sheet.update_cells(cell_reset)
@@ -186,6 +186,9 @@ class ShiftsController:
 
         # converts times in hd_shifts to 24-hour format
         for shift in hd_shifts:
+            date = datetime.strptime(shift['Date'], '%x')
+            shift['Date'] = date.strftime('%x')
+            # if time-in does not end in 'M' (as in AM/PM), it is already in 24-hour format, break out of loop
             if shift['Start Time'][-1] != 'M':
                 break
             shift['Start Time'] = self.convert_time_format(shift['Start Time'], 24)
@@ -193,7 +196,10 @@ class ShiftsController:
 
         # converts times in scan_shifts to 24-hour format and user-names into full names
         for shift in scan_shifts:
+            date = datetime.strptime(shift['Date'], '%x')
+            shift['Date'] = date.strftime('%x')
             # if time-in is empty, time conversion is complete, break out of loop
+            # if time-in does not end in 'M' (as in AM/PM), it is already in 24-hour format, break out of loop
             if shift['In'] == '' or shift['In'][-1] != 'M':
                 break
             shift['In'] = self.convert_time_format(shift['In'], 24)
@@ -219,11 +225,12 @@ class ShiftsController:
         # check for multiple shifts (i.e. checking hd_shifts[n+1] would lead to IndexError out of bounds without this)
         hd_shifts.insert(len(hd_shifts),
                          {'Shift ID': '', 'Date': '', 'Start Time': '', 'End Time': '', 'Employee Name': ''})
+        scan_shifts.insert(len(scan_shifts), {'Name': '', 'Date': '12/31/30', 'In': '23:58', 'Out': '23:59'})
 
         # loops through all information in the hd_shifts and scan_shifts lists of dictionaries of shift info
         for n in range(0, len(hd_shifts)):
             # this ends the loop once all shifts have been documented
-            if hd_shifts[n]['Employee Name'] == '':
+            if hd_shifts[n]['Employee Name'] == '' or scan_shifts[scan_row]['Name'] == '':
                 break
 
             # skips iterating over each shift of a student's multiple shifts in a row
@@ -266,8 +273,9 @@ class ShiftsController:
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while end_time == datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n+1]['Start Time'], '%x%H:%M') \
-                        and hd_shifts[n]['Employee Name'] == hd_shifts[n+1]['Employee Name']:
+                while hd_shifts[n]['Date'] == hd_shifts[n+1]['Date'] and hd_shifts[n]['End Time'] == \
+                        hd_shifts[n+1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
+                        hd_shifts[n+1]['Employee Name']:
                     n += 1
                     shift_count = n
                     # updates the flagged_shifts sheet with info about that shift
@@ -279,15 +287,15 @@ class ShiftsController:
 
             # case: student skips entire shift or forgets to clock in AND out
             if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=20):
-                cause = 'Skipped or forgot to clock shift'
+                cause = 'Skipped shift'
                 # updates the flagged_shifts sheet with info about that shift
                 self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=True)
                 flag_count += 1
 
                 # if student forgets to clock out on a multiple shift
-                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
-                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
-                        hd_shifts[n + 1]['Employee Name']:
+                while hd_shifts[n]['Date'] == hd_shifts[n+1]['Date'] and hd_shifts[n]['End Time'] == \
+                        hd_shifts[n+1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
+                        hd_shifts[n+1]['Employee Name']:
                     n += 1
                     shift_count = n
                     # updates the flagged_shifts sheet with info about that shift
