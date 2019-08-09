@@ -2,4 +2,5 @@
 .idea*
 config.py
 client_secret.json
+gs_client_secret.json
 .DS_Store
