@@ -21,9 +21,9 @@ class ShiftsView(FlaskView):
         try:
             day_list = self.sc.day_list()
             return render_template('student_index.html', day_list=day_list)
-        except APIError as api_error:
-            if str(api_error).find("RESOURCE_EXHAUSTED") or str(api_error)[27:30] == '429':
-                return render_template('student_index.html', **locals())
+        except APIError:
+            # displays table of no shifts, since shift data is where the API calls occur
+            return render_template('student_index.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
@@ -38,9 +38,8 @@ class ShiftsView(FlaskView):
                 return render_template('student_table.html', day_list=day_list)
             else:
                 return 'failed'
-        except APIError as api_error:
-            if str(api_error).find("RESOURCE_EXHAUSTED") or str(api_error)[27:30] == '429':
-                return 'resource exhausted'
+        except APIError:
+            return 'resource exhausted'
 
     # FULL-TIME STAFF #
 
@@ -53,9 +52,8 @@ class ShiftsView(FlaskView):
         try:
             self.sc.shift_processor()
             return 'shift data processing complete'
-        except APIError as api_error:
-            if str(api_error).find("RESOURCE_EXHAUSTED") or str(api_error)[27:30] == '429':
-                return 'resource exhausted'
+        except APIError:
+            return 'resource exhausted'
 
     @route('/help')
     def help(self):

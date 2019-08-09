@@ -1,6 +1,6 @@
 $(document).ready(function() {
     // Clicking the Process Shift Data button displays a loading GIF, triggers the shift_processor method in
-    // shifts_controller.py, and returns an alert with the result of the method (success / failure & why)
+    // shifts_controller.py, and returns an alert with the result of the method (success/failure)
     $("#process-shifts").click(function() {
         $('#resource-exhausted').hide();
         $('#processing-complete').hide();
@@ -28,11 +28,11 @@ $(document).ready(function() {
             let scanned_input = {
                 'scan': input
             };
-            $.post('/verify_scanner', scanned_input, function (success) {
+            $.post('/verify_scanner', scanned_input, function (scan_success) {
                 $('.spinner').hide();
-                if (success != 'failed' && success != 'resource exhausted') {
-                    $("#student-tbody").html(success);
-                } else if (success == 'failed') {
+                if (scan_success != 'failed' && scan_success != 'resource exhausted') {
+                    $("#student-tbody").html(scan_success);
+                } else if (scan_success == 'failed') {
                     $('#time-clock-fail').fadeTo(2000, 500).slideUp(500, function() {
                         $("#time-clock-fail").slideUp(500);
                     });

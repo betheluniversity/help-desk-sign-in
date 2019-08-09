@@ -8,17 +8,6 @@
       <div class="col-sm-12">
         <div class="card">
           <div class="card-body">
-              <h5><u>Student Employees Tab</u></h5>
-              <h6>How do the students clock in and out and where is the information stored?</h6>
-              <p>
-                  Students can clock in and out of their shifts by scanning their Bethel ID cards on the RFID scanner at the Help Desk.
-                  When a student clocks in or out, their card ID matches with their user info from the 'hd_users' sheet in the Google Sheet.
-                  Upon matching, the timestamp is recorded as either a clock in or out and is sent to the 'scan_input' sheet as well as displayed on the home page of the site.
-                  The 'Student Employees' tab (home page) of the site displays the current day's recorded shifts from the full list of shifts.
-                  All other shifts remain in the 'scan_input' sheet out of the students' view.
-              </p>
-          </div>
-          <div class="card-body">
               <h5><u>Full-Time Staff Tab</u></h5>
               <h6>What is a "bad" shift?</h6>
                   <p>
@@ -31,7 +20,7 @@
                           Student forgets to clock out of their shift. If the student forgets to clock in, but clocks out, such action will be treated as a successful clock in and a missed clock out and marked the same.
                           This is treated as "bad" because it is unknown when they left their shift if there is not data from both the clock in and clock out times.
                       </li>
-                      <li>Student skips their shift or forgets to clock their shift entirely. Forgetting to clock the shift entirely means the student forgot to clock in <u>and</u> out.</li>
+                      <li>Student skips their shift or forgets to clock their shift entirely. Forgetting to clock the shift entirely means the student forgot to clock in <b>and</b> out.</li>
                   </ul>
               <h6>What do I need to do before clicking the "Process Shift Data" button?</h6>
                   <p>
@@ -41,7 +30,7 @@
                   </p>
                   <p>The date range must match between the lists of shifts in the 'hd_export' and 'scan_input' sheets of the Google Sheet.</p>
                   <ul>
-                      <li>The beginning date of this range <u>must be the same</u> for the button to run properly, however, the end date between the two sheets does not need to be the same.</li>
+                      <li>The beginning date of this range <b>must be the same</b> for the button to run properly, however, the end date between the two sheets does not need to be the same.</li>
                       <li>If the end date for 'hd_export' is later than 'scan_input', all shifts for those later dates in 'hd_export' will be marked as missed shifts and will appear in the 'flagged_shifts' sheet.</li>
                       <li>
                           If the end date for 'scan_input' is later than 'hd_export', all shifts for those later dates in 'scan_input' will be ignored by the program and not marked as anything.
@@ -70,9 +59,22 @@
                 <p>
                     The "server exhausted" error occurs when the Google Sheet receives too many requests in a short time to receive or send data between one of the sheets and the code in the program.
                     This error can occur at three instances on the site: running the "Process Shift Data" program, scanning IDs to clock in or out of shifts, and accessing the home page with the table of student shifts for the day.
+                    The "Process Shift Data" program can handle as many shifts in the 'hd_export' and 'scan_input' sheets as desired, but <b>it will exhaust the server if it exceeds 95-100 "bad" shifts</b> posted to the 'flagged_shifts' sheet.
+                    If the error appears when running the "Process Shift Data" button, shorten the number of shifts in 'hd_export' and 'scan_input' to limit the number of "bad" shifts posting to 'flagged_shifts'.
                     While the error is unlikely to occur during normal use, when the error appears, waiting 60 seconds or so and refreshing the page will typically solve the problem.
-                    If the error continues appearing, wait another minute and it should fix itself. If the problem persists, contact the Web team.
+                    If the error appears multiple times, wait another minute and it should fix itself. If the problem persists, contact the Web team.
                 </p>
+          </div>
+          <div class="card-body">
+              <h5><u>Student Employees Tab</u></h5>
+              <h6>How do the students clock in and out and where is the information stored?</h6>
+              <p>
+                  Students can clock in and out of their shifts by scanning their Bethel ID cards on the RFID scanner at the Help Desk.
+                  When a student clocks in or out, their card ID matches with their user info from the 'hd_users' sheet in the Google Sheet.
+                  Upon matching, the timestamp is recorded as either a clock in or out and is sent to the 'scan_input' sheet as well as displayed on the home page of the site.
+                  The 'Student Employees' tab (home page) of the site displays the current day's recorded shifts from the full list of shifts.
+                  All other shifts remain in the 'scan_input' sheet out of the students' view.
+              </p>
           </div>
         </div>
       </div>

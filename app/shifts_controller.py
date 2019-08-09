@@ -18,6 +18,7 @@ client = gspread.authorize(credentials)
 
 # variables with 'client.open' grant access to that specific sheet of the Help Desk Sign In Google Sheet
 spreadsheet = client.open('help_desk_sign_in')
+
 # 'gsheet_flagged_shifts' stores the "bad" shifts of students when the scanned input is compared to their schedule
 gsheet_flagged_shifts = spreadsheet.worksheet('flagged_shifts')
 # 'gsheet_scan_input' stores the clock in/out info from the Help Desk RFID scanner, tracking student attendance
@@ -42,7 +43,7 @@ class ShiftsController:
 
         # the cell_list below applies as a clock-in, which is assumed unless the clock-out criteria are met within the
         # double for-loops for shifts_list and users_list
-        # cell_list sets the range of cells in the Google Sheet to append the data to
+        # cell_list sets the range of cells in the Google Sheet to which the data will be appended
         # len(self.shifts_list) + 2 is the row in the scan_input sheet this cell_list will append to
         # len(self.shifts_list) + 2 = number of shifts currently entered + 2
         # 2 = +1 for the header row in scan_input and +1 for a new entry into the list
@@ -179,7 +180,6 @@ class ShiftsController:
         # Google Sheets API and not exceed their limit of 100 read requests per 100 seconds
         hd_shifts = self.hd_list()
         scan_shifts = self.shifts_list()
-        hd_users = self.users_list()
 
         # searches through hd_shifts and removes all empty shifts from the list of dictionaries
         hd_shifts = [shift for shift in hd_shifts if not shift['Employee Name'] == '']
@@ -222,7 +222,7 @@ class ShiftsController:
         self.reset_sheet_data(gsheet_flagged_shifts, 8)
 
         # appends an empty shift onto the end of the hd_export list of dictionaries because otherwise, the method cannot
-        # check for multiple shifts (i.e. checking hd_shifts[n+1] would lead to IndexError out of bounds without this)
+        # check for multiple shifts (i.e. checking hd_shifts[n+1] could lead to IndexError out of bounds without this)
         hd_shifts.insert(len(hd_shifts),
                          {'Shift ID': '', 'Date': '', 'Start Time': '', 'End Time': '', 'Employee Name': ''})
         scan_shifts.insert(len(scan_shifts), {'Name': '', 'Date': '12/31/30', 'In': '23:58', 'Out': '23:59'})
@@ -244,29 +244,20 @@ class ShiftsController:
             end_time = datetime.strptime(hd_shifts[n]['Date']+hd_shifts[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
-            # case: student quickly signs in and out (within 10 minutes of each other), ignoring it as no shift
-            # i.e. possible accidental sign in and out
-            while scan_shifts[scan_row]['Out'] != '' and \
-                    datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['Out'], '%x%H:%M') - \
-                    timedelta(minutes=10) <= time_in:
-                scan_row += 1
-                time_in = datetime.strptime(scan_shifts[scan_row]['Date']+scan_shifts[scan_row]['In'], '%x%H:%M')
-
             # case: student clocks in when they were not scheduled for a shift at that time
             # checks if the clock in is not within 60 minutes in either direction of the scheduled shift start time
-            # if so, it checks if the next scanned sign-in in the list matches the shift being compared to
-            # if this matches, it counts the original scanned sign-in as a shift they were not assigned to
+            # if so, it checks if the scheduled start time is later (in date or time) than the clocked time in
+            # if true, it counts the original scanned shift as a shift they were not assigned to
+            # if false, it continues down to where it is marked as a skipped shift
             if not start_time - timedelta(minutes=60) <= time_in <= start_time + timedelta(minutes=60):
-                if start_time - timedelta(minutes=10) <= \
-                        datetime.strptime(scan_shifts[scan_row+1]['Date']+scan_shifts[scan_row+1]['In'], '%x%H:%M')\
-                        <= start_time + timedelta(minutes=15):
+                while start_time > time_in and hd_shifts[n]['Employee Name'] == scan_shifts[scan_row]['Name']:
                     scan_row += 1
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
 
             # case: student forgets to clock out (time out value is empty)
             # forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
-            if scan_shifts[scan_row]['Out'] == '':
+            if scan_shifts[scan_row]['Out'] == '' and hd_shifts[n]['Date'] == scan_shifts[scan_row]['Date']:
                 cause = 'Forgot to clock in or out'
                 # updates the flagged_shifts sheet with info about that shift
                 self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, flag_count, cause, skipped=False)
