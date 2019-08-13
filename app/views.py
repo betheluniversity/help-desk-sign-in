@@ -90,10 +90,10 @@ class ShiftsView(FlaskView):
     def index(self):
         try:
             day_list = self.sc.day_list()
-            return render_template('student_index.html', day_list=day_list)
+            return render_template('index.html', day_list=day_list)
         except APIError:
             # displays table of no shifts, since shift data is where the API calls occur
-            return render_template('student_index.html', **locals())
+            return render_template('index.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
@@ -105,7 +105,7 @@ class ShiftsView(FlaskView):
                 card_id = int(scan[2:-2])
                 self.sc.student_time_clock(card_id)
                 day_list = self.sc.day_list()
-                return render_template('student_table.html', day_list=day_list)
+                return render_template('shifts_table.html', day_list=day_list)
             else:
                 return 'failed'
         except APIError:
@@ -113,8 +113,8 @@ class ShiftsView(FlaskView):
 
     # FULL-TIME STAFF #
 
-    @route('/full-time-staff')
-    def full_time_staff_index(self):
+    @route('/staff')
+    def staff_index(self):
         return render_template('staff_index.html', **locals())
 
     @route('/process_shifts', methods=['POST'])

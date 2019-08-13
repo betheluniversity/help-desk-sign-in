@@ -18,7 +18,7 @@ $(document).ready(function() {
 
     // Scanning a Bethel ID on the RFID scanner sends card ID data to views.py and subsequently the student_time_clock
     // method in shifts_controller.py, where it logs the time in/out and returns from views.py as a POST. Along with a
-    // loading GIF, the time in/out is appended to the table in student_table.html
+    // loading GIF, the time in/out is appended to the table in shifts_table.html
     let input = "";
     $(document).on('keydown', function(key) {
         if (key.keyCode == 13) {
