@@ -34,7 +34,14 @@ class ShiftsView(FlaskView):
             if 'username' not in session.keys():
                 get_user()
 
+            get_its_view()
+
+            # TODO: change to ".. and session['ITS_view'] is False:"
             if '/full-time-staff' in request.path and session['username'] != 'mjw83735':
+                abort(403)
+
+            # TODO: change to ".. and (session['ITS_view'] is False and session['ITS_Student_view'] is False):"
+            if '/' in request.path and session['username'] != 'mjw83735':
                 abort(403)
 
             if 'ITS_view' not in session.keys() or 'ITS_view' is None or \
@@ -51,6 +58,8 @@ class ShiftsView(FlaskView):
 
         def get_its_view():
             try:
+                # ITS_view = True if a full-time staff member at the Help Desk
+                # ITS_Student_view = True if a student employee at the Help Desk
                 session['ITS_view'] = False
                 session['ITS_Student_view'] = False
                 con = ldap.initialize(app.config['LDAP_CONNECTION_INFO'])
