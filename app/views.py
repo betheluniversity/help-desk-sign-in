@@ -34,6 +34,8 @@ class ShiftsView(FlaskView):
             if 'username' not in session.keys():
                 get_user()
 
+            # TODO: Should we restrict all site access to only ITS staff & students? The issue with this would be
+            #  needing to call get_its_view() with every page-load, as is done below
             get_its_view()
 
             # TODO: change to ".. and session['ITS_view'] is False:"
@@ -84,20 +86,20 @@ class ShiftsView(FlaskView):
 
         init_user()
 
-    # STUDENT EMPLOYEES #
+    # TIME CLOCK #
 
     @route('/')
     def index(self):
-        try:
+        # try:
             day_list = self.sc.day_list()
             return render_template('index.html', day_list=day_list)
-        except APIError:
-            # displays table of no shifts, since shift data is where the API calls occur
-            return render_template('index.html', **locals())
+        # except APIError:
+        #     # displays table of no shifts, since shift data is where the API calls occur
+        #     return render_template('index.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
-        try:
+        # try:
             form = request.form
             scan = form.get("scan")
             scan_success = re.search("\[\[(.+?)\]\]", scan)
@@ -108,10 +110,10 @@ class ShiftsView(FlaskView):
                 return render_template('shifts_table.html', day_list=day_list)
             else:
                 return 'failed'
-        except APIError:
-            return 'resource exhausted'
+        # except APIError:
+        #     return 'resource exhausted'
 
-    # FULL-TIME STAFF #
+    # STAFF #
 
     @route('/staff')
     def staff_index(self):
@@ -119,11 +121,11 @@ class ShiftsView(FlaskView):
 
     @route('/process_shifts', methods=['POST'])
     def process_shifts(self):
-        try:
+        # try:
             self.sc.shift_processor()
             return 'shift data processing complete'
-        except APIError:
-            return 'resource exhausted'
+        # except APIError:
+        #     return 'resource exhausted'
 
     @route('/help')
     def help(self):

@@ -1,8 +1,8 @@
 .active {
-    max-height: 30px;
     background-color: #0F2C52;
-    color: white !important;
     border-radius: 6px;
+    color: white !important;
+    max-height: 30px;
     padding: 3px 16px
 }
 
@@ -29,26 +29,35 @@ a.nav-link:hover{
 body {
     background: #ffffff;
     color: #222;
-    padding: 0;
-    margin: 0;
-    font-size: 0.93em;
-    font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
-    font-weight: normal;
-    font-style: normal;
-    line-height: 1.5;
-    position: relative;
     cursor: auto;
+    font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+    font-size: 0.93em;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    position: relative;
 }
 
 .body-margins {
-    width: 100%;
     margin: 20px auto;
     max-width: 95%;
 }
 
+.body-staff {
+    margin: 20px auto;
+    max-width: 75%;
+}
+
+.body-time-clock {
+    margin: 20px auto;
+    max-width: 50%;
+}
+
 .btn {
     margin: 5px 0;
-    width: 200px;
+    width: 175px;
 }
 
 .btn-primary {
@@ -66,7 +75,7 @@ div.centered {
 }
 
 div.col-sm-6, div.col-sm-12 {
-    padding: 8px;
+    padding-top: 16px;
 }
 
 html, body {
@@ -86,21 +95,29 @@ span.site-title {
 }
 
 .spinner {
-    top: 50%;
     left: 50%;
     margin: 0 auto;
-    text-align: center;
-    z-index: 1234;
     overflow: auto;
+    text-align: center;
+    top: 50%;
+    z-index: 1234;
 }
 
 .spinner-img {
-    position: fixed;
-    margin-left: -60px;
-    width: 120px;
     height: auto;
+    margin-left: -60px;
+    position: fixed;
+    width: 120px;
 }
 
 #title-bar {
-    margin: 0 0 12px;
+    margin: 12px 0;
+}
+
+table {
+  table-layout: fixed ;
+  width: 100% ;
+}
+td {
+  width: 25% ;
 }

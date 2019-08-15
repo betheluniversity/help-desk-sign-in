@@ -1,6 +1,7 @@
 {% extends 'help_desk_base.html' %}
 
 {% block body_content %}
+<div class="body-time-clock">
     <form>
         <div class="centered">
             <h3 id="title-bar">Scan ID to Sign In or Out</h3>
@@ -23,4 +24,5 @@
             {% include 'shifts_table.html' %}
         </tbody>
     </table>
+</div>
 {% endblock %}
