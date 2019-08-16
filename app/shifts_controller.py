@@ -52,9 +52,15 @@ class ShiftsController:
         # 2 = +1 for the header row in scan_input and +1 for a new entry into the list
         cell_list = gsheet_scan_input.range(len(shifts_list) + 2, 1, len(shifts_list) + 2, 4)
 
+        # tracks whether an ID scan has matched with a user in hd_users
+        # if matched = True, the clock in/out will be successful
+        # if matched = False, an error message will display that the user was not found
+        matched = False
+
         # searching through users and shifts to match card_id and determine clock in or out
         for user in users_list:
             if user['Card ID'] == card_id:
+                matched = True
                 for shift in shifts_list:
                     # if shifts_list username matches users_list username and the shift's clock out is empty, this is a
                     # clock-out. cell_list sets the row in scan_input to append to as shifts_list.index(shift) + 2
@@ -65,16 +71,14 @@ class ShiftsController:
                                                             shifts_list.index(shift) + 2, 4)
                         cell_list[3].value = current_time
                         gsheet_scan_input.update_cells(cell_list)
-                        # if there is not a return here, the code below executes and thus, when a clock out occurs, it
-                        # is logged as both a clock out and a new clock in if this return statement does not exist
-                        # TODO: Is there a better way to prevent each clock-out from also being a clock-in without a
-                        #  return string?
-                        return 'scan success'
+                        return matched
                 # cell_list[number].value sets a cell to a value, with number = column number in the Google Sheet range
                 cell_list[0].value = user['Name']  # sets username
                 cell_list[1].value = date  # sets date
                 cell_list[2].value = current_time  # sets time in as current time
                 gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
+                break
+        return matched
 
     # the 3 methods below refresh the necessary list of sheets called by student_time_clock, day_list, and
     # shift_processor

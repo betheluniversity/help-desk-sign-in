@@ -5,8 +5,10 @@
     <form>
         <div class="centered">
             <h3 id="title-bar">Scan ID to Sign In or Out</h3>
+            <h3 class="alert alert-success" id="time-clock-success" style="display: none;">Scan success</h3>
+            <h3 class="alert alert-danger" id="time-clock-no-match" style="display: none;">Scan failed, user not found</h3>
             <h3 class="alert alert-danger" id="time-clock-fail" style="display: none;">Scan failed, try again</h3>
-            <h3 class="alert alert-danger" id="resource-exhausted" style="display: none;">Error: server exhausted. Please wait 1 minute and try again.</h3>
+            <h3 class="alert alert-danger" id="resource-exhausted" style="display: none;">Error: Server Exhausted. Please wait 1 minute and try again.</h3>
         </div>
         <div class="spinner" style="display: none;">
             <img id="img-spinner" class="spinner-img" src="https://cdn1.bethel.edu/images/load.gif" alt="Loading"/>

@@ -34,21 +34,12 @@ class ShiftsView(FlaskView):
             if 'username' not in session.keys():
                 get_user()
 
-            # TODO: Should we restrict all site access to only ITS staff & students? The issue with this would be
-            #  needing to call get_its_view() with every page-load, as is done below
-            get_its_view()
+            if 'ITS_view' not in session.keys() or 'ITS_view' is None:
+                get_its_view()
 
             # TODO: change to ".. and session['ITS_view'] is False:"
-            if '/full-time-staff' in request.path and session['username'] != 'mjw83735':
+            if '/staff' in request.path and session['username'] != 'mjw83735':
                 abort(403)
-
-            # TODO: change to ".. and (session['ITS_view'] is False and session['ITS_Student_view'] is False):"
-            if '/' in request.path and session['username'] != 'mjw83735':
-                abort(403)
-
-            if 'ITS_view' not in session.keys() or 'ITS_view' is None or \
-                    'ITS_Student_view' not in session.keys() or 'ITS_Student_view' is None:
-                get_its_view()
 
         def get_user():
             if app.config['ENVIRON'] == 'prod':
@@ -60,10 +51,7 @@ class ShiftsView(FlaskView):
 
         def get_its_view():
             try:
-                # ITS_view = True if a full-time staff member at the Help Desk
-                # ITS_Student_view = True if a student employee at the Help Desk
                 session['ITS_view'] = False
-                session['ITS_Student_view'] = False
                 con = ldap.initialize(app.config['LDAP_CONNECTION_INFO'])
                 con.simple_bind_s('BU\svc-tinker', app.config['LDAP_SVC_TINKER_PASSWORD'])
 
@@ -76,13 +64,8 @@ class ShiftsView(FlaskView):
                         user_iam_group = re.search('CN=([^,]*)', str(ldap_string)).group(1)
                         if user_iam_group == 'ITS - Employees':
                             session['ITS_view'] = True
-                        elif user_iam_group == 'ITS - Help Desk Call Center Students' or \
-                            user_iam_group == 'ITS - Help Desk Student Managers' or \
-                                user_iam_group == 'ITS - Desktop Services Students':
-                            session['ITS_Student_view'] = True
             except:
                 session['ITS_view'] = False
-                session['ITS_Student_view'] = False
 
         init_user()
 
@@ -105,9 +88,11 @@ class ShiftsView(FlaskView):
             scan_success = re.search("\[\[(.+?)\]\]", scan)
             if scan_success and len(scan[2:-2]) == 5:
                 card_id = int(scan[2:-2])
-                self.sc.student_time_clock(card_id)
-                day_list = self.sc.day_list()
-                return render_template('shifts_table.html', day_list=day_list)
+                if self.sc.student_time_clock(card_id):
+                    day_list = self.sc.day_list()
+                    return render_template('shifts_table.html', day_list=day_list)
+                else:
+                    return 'no match'
             else:
                 return 'failed'
         except APIError:
