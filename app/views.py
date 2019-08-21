@@ -34,7 +34,7 @@ class ShiftsView(FlaskView):
             if 'username' not in session.keys():
                 get_user()
 
-            if 'ITS_view' not in session.keys() or 'ITS_view' is None:
+            if 'ITS_view' not in session.keys():
                 get_its_view()
 
             # TODO: change to ".. and session['ITS_view'] is False:"

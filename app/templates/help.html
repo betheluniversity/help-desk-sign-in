@@ -2,7 +2,7 @@
 
 {% block body_content %}
     <div class="centered">
-        <h3 id="title-bar">Help-Desk Manager FAQ</h3>
+        <h3 id="title-bar">Service Desk Manager FAQ</h3>
     </div>
     <div class="row">
       <div class="col-sm-12">
@@ -24,21 +24,21 @@
                   </ul>
               <h6>What do each of the buttons do?</h6>
                   <ul>
-                      <li>Process Shift Data: This button runs the code to analyze the differences between the shift schedule entered by you into the 'hd_export' sheet and the scanned shifts from the student employees.</li>
+                      <li>Process Shift Data: Runs the code to analyze the differences between the shift schedule entered by you into the 'hd_export' sheet and the scanned shifts from the student employees.</li>
                       <li>
-                          Flagged Shifts: This button opens the 'flagged_shifts' sheet within the Google Sheet for this page. The 'flagged_shifts' sheet contains the collected data of "bad" shifts after
+                          Flagged Shifts: Opens the 'flagged_shifts' sheet within the Google Sheet for this page. The 'flagged_shifts' sheet contains the collected data of "bad" shifts after
                           the shift processor analyzes the shifts between the 'hd_export' and 'scan_input' sheets when the "Process Shift Data" button is clicked.
                       </li>
                       <li>
-                          Help Desk Schedule: This button opens the 'hd_export' sheet, which contains the student shift schedule entered by you. The time period of the starting and ending shifts of this data you input will be
+                          Help Desk Schedule: Opens the 'hd_export' sheet, which contains the student shift schedule entered by you. The time period of the starting and ending shifts of this data you input will be
                           the time period analyzed by the shift processor when you click the "Process Shift Data" button. This sheet clears when the "Process Shift Data" button is clicked.
                       </li>
                       <li>
-                          Scanner Data: This button opens the 'scan_input' sheet, collecting data as students scan their IDs on the RFID scanner. Each shift is documented in this sheet and cleared when the "Process Shift Data"
+                          Scanner Data: Opens the 'scan_input' sheet, collecting data as students scan their IDs on the RFID scanner. Each shift is documented in this sheet and cleared when the "Process Shift Data"
                           button is clicked.
                       </li>
                       <li>
-                          Student Employees: This button opens the 'hd_users' sheet, which contains the list of current student employees at the Help Desk, or any students you want signing in and out of shifts. Any student you
+                          Student Employees: Opens the 'hd_users' sheet, which contains the list of current student employees at the Help Desk, or any students you want signing in and out of shifts. Any student you
                           want signing in and out of shifts with the scanner must have their full name and card ID entered in this sheet.
                       </li>
                   </ul>
@@ -79,7 +79,6 @@
                 <p>
                     The "server exhausted" error occurs when the Google Sheet receives too many requests in a short time to receive or send data between one of the sheets and the code in the program.
                     This error can occur at three instances on the site: running the "Process Shift Data" program, scanning IDs to clock in or out of shifts, and accessing the home page with the table of student shifts for the day.
-                    If the error appears when running the "Process Shift Data" button, shorten the number of shifts in 'hd_export' and 'scan_input' to limit the number of "bad" shifts posting to 'flagged_shifts'.
                     While the error is unlikely to occur during normal use, when the error appears, waiting 60 seconds or so and refreshing the page will typically solve the problem.
                     If the error appears multiple times, wait another minute and it should fix itself. If the problem persists, contact the Web team.
                 </p>
@@ -91,7 +90,7 @@
                   Students can clock in and out of their shifts by scanning their Bethel ID cards on the RFID scanner at the Help Desk.
                   When a student clocks in or out, their card ID matches with their user info from the 'hd_users' sheet in the Google Sheet.
                   Upon matching, the timestamp is recorded as either a clock in or out and is sent to the 'scan_input' sheet as well as displayed on the home page of the site.
-                  The 'Time Clock' tab (home page) of the site displays the current day's recorded shifts from the full list of shifts.
+                  The Time Clock page displays the current day's recorded shifts from the full list of shifts.
                   All other shifts remain in the 'scan_input' sheet out of the students' view.
               </p>
           </div>

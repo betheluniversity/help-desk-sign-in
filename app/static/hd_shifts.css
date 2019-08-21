@@ -47,17 +47,17 @@ body {
 
 .body-staff {
     margin: 20px auto;
-    max-width: 75%;
+    max-width: 1200px;
 }
 
 .body-time-clock {
     margin: 20px auto;
-    max-width: 50%;
+    max-width: 900px;
 }
 
 .btn {
     margin: 5px 0;
-    width: 175px;
+    width: 200px;
 }
 
 .btn-primary {
@@ -115,9 +115,6 @@ span.site-title {
 }
 
 table {
-  table-layout: fixed ;
+  table-layout: fixed;
   width: 100% ;
-}
-td {
-  width: 25% ;
 }

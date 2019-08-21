@@ -1,7 +1,7 @@
-This project is designed to help the ITS Help Desk manager keep track of his or her students' work hours at the Help
-Desk with an RFID scanner to track the start and end of each student's work shift (clocking in and out).
+This project is designed to help the ITS Service Desk manager keep track of his or her students' work hours at the
+Service Desk with an RFID scanner to track the start and end of each student's work shift (clocking in and out).
 
-The HD manager uploads his or her student schedule times for a desired time period into the 'hd_export' sheet of the
+The manager uploads his or her student schedule times for a desired time period into the 'hd_export' sheet of the
 Google Spreadsheet linked in 'sheets_controller.py'. The manager also must enter student information such as their full 
 name and the 5-digit card ID # associated with them, located on the back of their student ID card, into the
 'hd_users' sheet. With each clock in and out from their shifts, students will scan an RFID scanner with their ID and
