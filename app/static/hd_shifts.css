@@ -45,12 +45,7 @@ body {
     max-width: 95%;
 }
 
-.body-staff {
-    margin: 20px auto;
-    max-width: 1200px;
-}
-
-.body-time-clock {
+.body-staff, .body-time-clock {
     margin: 20px auto;
     max-width: 900px;
 }

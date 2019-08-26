@@ -38,7 +38,7 @@ class ShiftsView(FlaskView):
                 get_its_view()
 
             # TODO: change to ".. and session['ITS_view'] is False:"
-            if '/staff' in request.path and session['username'] != 'mjw83735':
+            if ('/staff' in request.path or '/help' in request.path) and session['username'] != 'mjw83735':
                 abort(403)
 
         def get_user():
