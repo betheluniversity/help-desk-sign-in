@@ -31,16 +31,16 @@ $(document).ready(function() {
             $.post('/verify_scanner', scanned_input, function (scan_success) {
                 $('.spinner').hide();
                 if (scan_success != 'failed' && scan_success != 'resource exhausted' && scan_success != 'no match') {
-                    $('#time-clock-success').fadeTo(2000, 500).slideUp(500, function () {
+                    $('#time-clock-success').fadeTo(3000, 500).slideUp(500, function () {
                         $("#time-clock-success").slideUp(500);
                     });
                     $("#student-tbody").html(scan_success);
                 } else if (scan_success == 'no match') {
-                    $('#time-clock-no-match').fadeTo(2000, 500).slideUp(500, function() {
+                    $('#time-clock-no-match').fadeTo(3000, 500).slideUp(500, function() {
                         $("#time-clock-no-match").slideUp(500);
                     });
                 } else if (scan_success == 'failed') {
-                    $('#time-clock-fail').fadeTo(2000, 500).slideUp(500, function() {
+                    $('#time-clock-fail').fadeTo(3000, 500).slideUp(500, function() {
                         $("#time-clock-fail").slideUp(500);
                     });
                 } else {

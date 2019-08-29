@@ -37,8 +37,7 @@ class ShiftsView(FlaskView):
             if 'ITS_view' not in session.keys():
                 get_its_view()
 
-            # TODO: change to ".. and session['ITS_view'] is False:"
-            if ('/staff' in request.path or '/help' in request.path) and session['username'] != 'mjw83735':
+            if ('/staff' in request.path or '/help' in request.path) and session['ITS_view'] is False:
                 abort(403)
 
         def get_user():
@@ -69,8 +68,6 @@ class ShiftsView(FlaskView):
 
         init_user()
 
-    # TIME CLOCK #
-
     @route('/')
     def index(self):
         try:
@@ -98,8 +95,6 @@ class ShiftsView(FlaskView):
         except APIError:
             return 'resource exhausted'
 
-    # STAFF #
-
     @route('/staff')
     def staff_index(self):
         return render_template('staff_index.html', **locals())
@@ -115,3 +110,7 @@ class ShiftsView(FlaskView):
     @route('/help')
     def help(self):
         return render_template('help.html', **locals())
+
+    @app.errorhandler(403)
+    def permission_denied(self):
+        return render_template('error403.html', **locals())

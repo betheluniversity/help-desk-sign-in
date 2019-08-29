@@ -35,9 +35,17 @@ class ShiftsController:
     # card id: 5-digit ID on Bethel IDs used to identify users
     def student_time_clock(self, card_id):
         timestamp = datetime.now()
+
         # formats the time into string format (example: 12:00 PM)
         current_time = timestamp.strftime('%-I:%M %p')
+
+        # formats the date into string format
         date = timestamp.strftime('%x')
+
+        # tracks whether an ID scan has matched with a user in hd_users
+        # if matched = True, the clock in/out will be successful
+        # if matched = False, method will trigger an error message to display that the user was not found
+        matched = False
 
         # refreshes list of scanned shifts and list of students and their card IDs
         shifts_list = self.shifts_list()
@@ -50,11 +58,6 @@ class ShiftsController:
         # len(self.shifts_list) + 2 = number of shifts currently entered + 2
         # 2 = +1 for the header row in scan_input and +1 for a new entry into the list
         cell_list = gsheet_scan_input.range(len(shifts_list) + 2, 1, len(shifts_list) + 2, 4)
-
-        # tracks whether an ID scan has matched with a user in hd_users
-        # if matched = True, the clock in/out will be successful
-        # if matched = False, method will trigger an error message to display that the user was not found
-        matched = False
 
         # searching through users and shifts to match card_id and determine clock in or out
         for user in users_list:
@@ -138,9 +141,16 @@ class ShiftsController:
         # if time slot is empty
         if convert_time == '':
             return ''
+
         # converts a time-string to 24-hour format for sorting chronologically easier
         if time_format == 24:
-            d = datetime.strptime(convert_time, '%I:%M %p')
+            try:  # create datetime object in form of 12:00 PM
+                d = datetime.strptime(convert_time, '%I:%M %p')
+            except ValueError:  # if 'AM/PM' is not included, create datetime object in form of 12:00
+                d = datetime.strptime(convert_time, '%I:%M')
+                # if hours > 9, add 12 hours because it was mistakenly read as 24-hour format when it was not
+                if d.hour < 9:
+                    d = d + timedelta(hours=12)
             return d.strftime('%H:%M')
         # converts a time-string to 12-hour format for easier readability
         else:  # time_format == 12
@@ -167,21 +177,20 @@ class ShiftsController:
     # reason: string of info about why the shift was flagged
     # skipped: boolean true/false value for if the student skipped the shift entirely
     def flagged_cells(self, hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
-        # creating new array of size 8 for the 8 columns in flagged_shifts sheet
-        flag_val = [''] * 8
-        # setting the values of the array with the "bad" shift data and returning to shift_processor method
-        flag_val[0] = hd_shifts[hd_row]['Shift ID']
-        flag_val[1] = hd_shifts[hd_row]['Date']
-        flag_val[2] = self.convert_time_format(hd_shifts[hd_row]['Start Time'], 12)
-        flag_val[3] = self.convert_time_format(hd_shifts[hd_row]['End Time'], 12)
-        flag_val[4] = hd_shifts[hd_row]['Employee Name']
-        if skipped:
-            flag_val[5] = ''
-            flag_val[6] = ''
-        else:
-            flag_val[5] = self.convert_time_format(scan_shifts[scan_row]['In'], 12)
-            flag_val[6] = self.convert_time_format(scan_shifts[scan_row]['Out'], 12)
-        flag_val[7] = reason
+        # creating new array for a new "bad" shift in flagged_shifts sheet, setting the values of the array with the
+        # shift data and returning to shift_processor method
+        flag_val = [hd_shifts[hd_row]['Shift ID'], hd_shifts[hd_row]['Date'],
+                    self.convert_time_format(hd_shifts[hd_row]['Start Time'], 12),
+                    self.convert_time_format(hd_shifts[hd_row]['End Time'], 12), hd_shifts[hd_row]['Employee Name']]
+
+        if skipped:  # if shift was skipped, append empty strings in 'In' and 'Out' columns
+            flag_val.append('')
+            flag_val.append('')
+        else:  # if shift was not skipped, append times for clock in and out in 'In' and 'Out' columns, respectively
+            flag_val.append(self.convert_time_format(scan_shifts[scan_row]['In'], 12))
+            flag_val.append(self.convert_time_format(scan_shifts[scan_row]['Out'], 12))
+
+        flag_val.append(reason)
         return flag_val
 
     # runs the comparison between hd_export and scan_input to determine "bad" shifts
@@ -195,6 +204,24 @@ class ShiftsController:
         scan_shifts = self.shifts_list()
         hd_shifts = self.hd_list()
 
+        # tracks the correct row number for scanner time in and out, taking into account possible extra shifts
+        # gets incremented at certain points in the for loop to keep n (row number for hd_export sheet) even with
+        # row number for scan_input
+        scan_row = 0
+
+        # tracks the current part of the extra shift(s)
+        shift_count = -1
+
+        # tracks lower and upper bounds for the shifts being compared in scan_input, later being able to clear shifts
+        # within this range and keeping others not in this range
+        lower_bound = -1
+        upper_bound = -1
+
+        # creates keys for the list of dictionaries titled 'flag_list'
+        # values that pair with these keys are added to flag_list via the flagged_cells method
+        flag_key = ['Shift ID', 'Date', 'Start Time', 'End Time', 'Employee Name', 'In', 'Out', 'Issue']
+        flag_list = []
+
         # searches through hd_shifts and removes all empty shifts from the list of dictionaries
         hd_shifts = [shift for shift in hd_shifts if not shift['Employee Name'] == '']
 
@@ -207,13 +234,8 @@ class ShiftsController:
         latest_shift = datetime.strptime(
             hd_shifts[0]['Date'] + self.convert_time_format(hd_shifts[0]['Start Time'], 24),
             '%x%H:%M')
-        # tracks lower and upper bounds for the shifts being compared in scan_input, later being able to clear shifts
-        # within this range and keeping others not in this range
-        lower_bound = -1
-        upper_bound = -1
-        time_frame = False
 
-        # converts times in hd_shifts to 24-hour format
+        # converts times in hd_shifts to 24-hour format amd sets the earliest and latest shifts
         for shift in hd_shifts:
             shift_date = shift['Date']
             shift['Date'] = datetime.strptime(shift['Date'], '%x')
@@ -222,13 +244,16 @@ class ShiftsController:
                 shift['End Time'] = self.convert_time_format(shift['End Time'], 24)
             except TypeError:
                 pass
+
             # sets earliest_shift to current shift in loop if before current value
             if datetime.strptime(shift_date + shift['Start Time'], '%x%H:%M') < earliest_shift:
                 earliest_shift = datetime.strptime(shift_date + shift['Start Time'], '%x%H:%M')
+
             # sets latest_shift to current shift in loop if after current value
             if datetime.strptime(shift_date + shift['Start Time'], '%x%H:%M') > latest_shift:
                 latest_shift = datetime.strptime(shift_date + shift['Start Time'], '%x%H:%M')
 
+        # converting clock ins and outs to 24-hour format to ensure chronological sort
         for shift in scan_shifts:
             try:
                 shift['In'] = self.convert_time_format(shift['In'], 24)
@@ -236,18 +261,22 @@ class ShiftsController:
             except TypeError:
                 pass
 
+        # copy_list is the list of shifts in scan_shifts that were not within the time range of earliest_shift and
+        # latest_shift in hd_shifts. These shifts are not being compared or posted to the 'flagged_shifts' sheet, so
+        # they are being copied to be re-posted to the 'scan_input' sheet after the scanned shifts are cleared
         copy_list = [shift for shift in scan_shifts if not earliest_shift - timedelta(minutes=30) <=
                      datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M') <= latest_shift + timedelta(minutes=30)]
 
+        # removing shifts from scan_shifts not within the date range of earliest through latest shift in hd_shifts
         scan_shifts = [shift for shift in scan_shifts if earliest_shift - timedelta(minutes=30) <=
                        datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M') <=
                        latest_shift + timedelta(minutes=30)]
 
         # converts times in scan_shifts to 24-hour format
         for shift in scan_shifts:
-            # shift_date = shift['Date']
             this_shift = datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M')
             shift['Date'] = datetime.strptime(shift['Date'], '%x')
+
             # if shift is within the bounds of the earliest and latest shifts in hd_export, then sets the lower and
             # upper bounds of the scan_input shifts that match the time range in hd_export
             if earliest_shift - timedelta(minutes=30) <= this_shift <= latest_shift + timedelta(minutes=30):
@@ -259,21 +288,6 @@ class ShiftsController:
         # sorts hd_shifts and scan_shifts dictionaries in order of name, then date, then start/clock-in time
         hd_shifts = self.multi_key_sort(hd_shifts, ['Employee Name', 'Date', 'Start Time'])
         scan_shifts = self.multi_key_sort(scan_shifts, ['Name', 'Date', 'In'])
-
-        # tracks the correct row number for scanner time in and out, taking into account possible extra shifts
-        # gets incremented at certain points in the for loop to keep n (row number for hd_export sheet) even with
-        # row number for scan_input
-        scan_row = 0
-        # tracks the current part of the extra shift(s)
-        shift_count = -1
-
-        # clear flagged_shifts sheet data prior to a new run-through of the shifts
-        # self.reset_sheet_data(gsheet_flagged_shifts, 8)
-
-        # creates keys for the list of dictionaries titled 'flag_list'
-        # values that pair with these keys are added to flag_list via the flagged_cells method
-        flag_key = ['Shift ID', 'Date', 'Start Time', 'End Time', 'Employee Name', 'In', 'Out', 'Issue']
-        flag_list = []
 
         # appends empty shifts to the end of hd_export and scan_shifts to prevent any IndexError out of bounds issues
         # when checking the next index's shift for multiple shifts (e.g., checking hd_shifts[n+1])
@@ -404,10 +418,25 @@ class ShiftsController:
 
             scan_row += 1
 
+        # adds shifts already in 'flagged_shifts' to flag_list, which will be posted to 'flagged_shifts'
+        for shift in flag_shifts:
+            flag_list.append(shift)
         # adds the list of dictionaries in flag_list into a usable format for sheets as 'cell_list'
         # cell_list posts all "bad" shifts to the flagged_shifts sheet at once using 'update_cells' function of gspread
-        cell_list = gsheet_flagged_shifts.range(len(flag_shifts) + 2, 1, len(flag_shifts) + len(flag_list) + 2, 8)
+        cell_list = gsheet_flagged_shifts.range(2, 1, len(flag_list) + 2, 8)
+
+        # setting shift date to a datetime object so it can be sorted by date as strings don't sort by date properly
         for shift in flag_list:
+            if isinstance(shift['Date'], str):
+                shift['Date'] = datetime.strptime(shift['Date'], '%x')
+
+        # sorting the shifts in 'flagged_shifts' by name, date, and start time
+        flag_list = self.multi_key_sort(flag_list, ['Employee Name', 'Date', 'Start Time'])
+
+        # setting each shift in the list to a cell in the 'flagged_shifts' sheet, then updating the cells of the sheet
+        for shift in flag_list:
+            shift_date = shift['Date']
+            shift['Date'] = shift_date.strftime('%x')
             index = flag_list.index(shift)
             cell_list[index * 8].value = shift['Shift ID']
             cell_list[index * 8 + 1].value = shift['Date']
@@ -417,10 +446,19 @@ class ShiftsController:
             cell_list[index * 8 + 5].value = shift['In']
             cell_list[index * 8 + 6].value = shift['Out']
             cell_list[index * 8 + 7].value = shift['Issue']
-        gsheet_flagged_shifts.update_cells(cell_list)  # appends to flagged_shifts sheet
 
+        # clear 'flagged_shifts' sheet data prior to a new run-through of the shifts
+        self.reset_sheet_data(gsheet_flagged_shifts, 8)
+
+        # re-add flagged shifts with new data to 'flagged_shifts' sheet
+        gsheet_flagged_shifts.update_cells(cell_list)
+
+        # clear 'scan_input' sheet data prior to re-adding unused shifts
         self.reset_sheet_data(gsheet_scan_input, 4)
+
+        # updates cells in scan_input from row 2 thru the length of copy_list
         cell_list = gsheet_scan_input.range(2, 1, len(copy_list) + 2, 4)
+        # re-adds shifts to scan_input that were not analyzed by the method
         for shift in copy_list:
             scan_date = shift['Date']
             if not isinstance(scan_date, str):
@@ -434,6 +472,5 @@ class ShiftsController:
             cell_list[index * 4 + 3].value = shift['Out']
         gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
 
-        # TODO: un-commment the code below before final PR to Master
         # clears the collected data for the scan_input and hd_export sheets, respectively
         self.reset_sheet_data(gsheet_hd_export, 5)

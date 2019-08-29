@@ -10,6 +10,6 @@ app.config.from_object('config')
 # Declaring and registering the view
 from app.views import ShiftsView
 
-# sentry = Sentry(app, dsn=app.config['SENTRY_URL'], logging=True, level=logging.INFO)
+sentry = Sentry(app, dsn=app.config['SENTRY_URL'], logging=True, level=logging.ERROR)
 
 ShiftsView.register(app, route_base='/')
