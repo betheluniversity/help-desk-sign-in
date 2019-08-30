@@ -34,13 +34,10 @@ class ShiftsController:
     # enters clock ins and outs into scan_input sheet
     # card id: 5-digit ID on Bethel IDs used to identify users
     def student_time_clock(self, card_id):
-        timestamp = datetime.now()
-
-        # formats the time into string format (example: 12:00 PM)
-        current_time = timestamp.strftime('%-I:%M %p')
-
-        # formats the date into string format
-        date = timestamp.strftime('%x')
+        # formats the current time into string format (example: 12:00 PM)
+        current_time = datetime.now().strftime('%-I:%M %p')
+        # formats the current date into string format
+        current_date = datetime.now().strftime('%x')
 
         # tracks whether an ID scan has matched with a user in hd_users
         # if matched = True, the clock in/out will be successful
@@ -68,7 +65,7 @@ class ShiftsController:
                     # clock out. cell_list sets the row in scan_input to append to as shifts_list.index(shift) + 2
                     # shifts_list.index(shift) = the index of that user's original clock-in
                     # len(shifts_list) is not used so the clock-out is not appended to a new row
-                    if shift['Name'] == user['Name'] and shift['Out'] == '' and shift['Date'] == date:
+                    if shift['Name'] == user['Name'] and shift['Out'] == '' and shift['Date'] == current_date:
                         cell_list = gsheet_scan_input.range(shifts_list.index(shift) + 2, 1,
                                                             shifts_list.index(shift) + 2, 4)
                         cell_list[3].value = current_time
@@ -76,7 +73,7 @@ class ShiftsController:
                         return matched
                 # cell_list[number].value sets a cell to a value, with number = column number in the Google Sheet range
                 cell_list[0].value = user['Name']  # sets username
-                cell_list[1].value = date  # sets date
+                cell_list[1].value = current_date
                 cell_list[2].value = current_time  # sets time in as current time
                 gsheet_scan_input.update_cells(cell_list)  # appends to scan_input sheet
                 break
@@ -102,12 +99,11 @@ class ShiftsController:
 
     # appends any existing shift from the scan_input sheet on the current day to a list that displays on the main page
     def day_list(self):
-        timestamp = datetime.now()
-        date = timestamp.strftime('%x')
+        current_date = datetime.now().strftime('%x')
         day_list = []
         shifts_list = self.shifts_list()
         for shift in shifts_list:
-            if shift['Date'] == date:
+            if shift['Date'] == current_date:
                 day_list.append(shift)
         day_list.reverse()
         return day_list
@@ -145,17 +141,12 @@ class ShiftsController:
         # converts a time-string to 24-hour format for sorting chronologically easier
         if time_format == 24:
             try:  # create datetime object in form of 12:00 PM
-                d = datetime.strptime(convert_time, '%I:%M %p')
+                return datetime.strptime(convert_time, '%I:%M %p').strftime('%H:%M')
             except ValueError:  # if 'AM/PM' is not included, create datetime object in form of 12:00
-                d = datetime.strptime(convert_time, '%I:%M')
-                # if hours > 9, add 12 hours because it was mistakenly read as 24-hour format when it was not
-                if d.hour < 9:
-                    d = d + timedelta(hours=12)
-            return d.strftime('%H:%M')
+                return datetime.strptime(convert_time, '%I:%M %p').strftime('%H:%M')
         # converts a time-string to 12-hour format for easier readability
         else:  # time_format == 12
-            d = datetime.strptime(convert_time, '%H:%M')
-            return d.strftime('%-I:%M %p')
+            return datetime.strptime(convert_time, '%H:%M').strftime('%-I:%M %p')
 
     # clears all cells in a specified sheet and resets their values to empty strings
     # sheet: sheet to be cleared
@@ -237,7 +228,7 @@ class ShiftsController:
 
         # converts times in hd_shifts to 24-hour format amd sets the earliest and latest shifts
         for shift in hd_shifts:
-            shift_date = shift['Date']
+            shift_date = shift['Date']  # setting shift_date to shift['Date'] before converting to datetime object
             shift['Date'] = datetime.strptime(shift['Date'], '%x')
             try:
                 shift['Start Time'] = self.convert_time_format(shift['Start Time'], 24)
@@ -298,9 +289,8 @@ class ShiftsController:
         # shift dates set to datetime.strptime objects are returned to strings for readability and so time_in, time_out,
         # and actual_duration can be set properly
         for shift in scan_shifts:
-            scan_date = shift['Date']
-            if not isinstance(scan_date, str):
-                shift['Date'] = scan_date.strftime('%x')
+            if not isinstance(shift['Date'], str):
+                shift['Date'] = shift['Date'].strftime('%x')
 
         # loops through all information in the hd_shifts and scan_shifts lists of dictionaries of shift info
         for n in range(0, len(hd_shifts)):
@@ -315,8 +305,7 @@ class ShiftsController:
 
             # shift dates set to datetime.strptime objects are returned to strings for readability and so start_time,
             # end_time, and set_duration can be set properly
-            hd_date = hd_shifts[n]['Date']
-            hd_shifts[n]['Date'] = hd_date.strftime('%x')
+            hd_shifts[n]['Date'] = hd_shifts[n]['Date'].strftime('%x')
 
             while hd_shifts[n]['Employee Name'] != scan_shifts[scan_row]['Name'] and \
                     hd_shifts[n]['Employee Name'] != scan_shifts[scan_row - 1]['Name']:
@@ -435,8 +424,7 @@ class ShiftsController:
 
         # setting each shift in the list to a cell in the 'flagged_shifts' sheet, then updating the cells of the sheet
         for shift in flag_list:
-            shift_date = shift['Date']
-            shift['Date'] = shift_date.strftime('%x')
+            shift['Date'] = shift['Date'].strftime('%x')
             index = flag_list.index(shift)
             cell_list[index * 8].value = shift['Shift ID']
             cell_list[index * 8 + 1].value = shift['Date']
@@ -460,9 +448,8 @@ class ShiftsController:
         cell_list = gsheet_scan_input.range(2, 1, len(copy_list) + 2, 4)
         # re-adds shifts to scan_input that were not analyzed by the method
         for shift in copy_list:
-            scan_date = shift['Date']
-            if not isinstance(scan_date, str):
-                shift['Date'] = scan_date.strftime('%x')
+            if not isinstance(shift['Date'], str):
+                shift['Date'] = shift['Date'].strftime('%x')
             shift['In'] = self.convert_time_format(shift['In'], 12)
             shift['Out'] = self.convert_time_format(shift['Out'], 12)
             index = copy_list.index(shift)
