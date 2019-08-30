@@ -1,5 +1,5 @@
-*.pyc
-.idea*
 config.py
-client_secret.json
 .DS_Store
+gs_client_secret.json
+.idea*
+*.pyc

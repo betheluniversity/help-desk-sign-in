@@ -1,6 +1,9 @@
+blinker
 Flask
 Flask-Classy==0.6.10
 gspread
 oauth2client
-SQLAlchemy
+python-ldap
+raven
 requests
+SQLAlchemy
