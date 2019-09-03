@@ -114,3 +114,7 @@ class ShiftsView(FlaskView):
     @app.errorhandler(403)
     def permission_denied(self):
         return render_template('error403.html', **locals())
+
+    @app.errorhandler(500)
+    def server_error(self):
+        return render_template('error500.html', **locals())
