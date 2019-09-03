@@ -5,7 +5,7 @@ import re
 import time
 
 # Packages
-from flask import abort, render_template, request, session
+from flask import abort, make_response, redirect, render_template, request, session, url_for
 from flask_classy import FlaskView, route
 
 # Local
@@ -70,12 +70,16 @@ class ShiftsView(FlaskView):
 
     @route('/')
     def index(self):
+        return render_template('index.html', **locals())
+
+    @route('/student-signin')
+    def student_signin(self):
         try:
             day_list = self.sc.day_list()
-            return render_template('index.html', day_list=day_list)
+            return render_template('student_signin.html', day_list=day_list)
         except APIError:
             # displays table of no shifts, since shift data is where the API calls occur
-            return render_template('index.html', **locals())
+            return render_template('student_signin.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
@@ -110,6 +114,18 @@ class ShiftsView(FlaskView):
     @route('/help')
     def help(self):
         return render_template('help.html', **locals())
+
+    @route('/cas_passthrough')
+    def cas_passthrough(self):
+        if app.config.get('ENVIRON') == 'prod':
+            session.clear()
+            resp = make_response(redirect(app.config['LOGOUT_URL'] + '?service=' + request.host_url[:-1] +
+                                          url_for('ShiftsView:student_signin')))
+            resp.set_cookie('MOD_AUTH_CAS_S', '', expires=0, path='/')
+            resp.set_cookie('MOD_AUTH_CAS', '', expires=0, path='/')
+            return resp
+        else:
+            return redirect(url_for('ShiftsView:student_signin'))
 
     @app.errorhandler(403)
     def permission_denied(self):

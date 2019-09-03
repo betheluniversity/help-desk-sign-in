@@ -45,13 +45,13 @@ body {
     max-width: 95%;
 }
 
-.body-staff, .body-time-clock {
+.body-margins-main {
     margin: 20px auto;
     max-width: 900px;
 }
 
 .btn {
-    margin: 5px 0;
+    margin-bottom: 8px;
     width: 200px;
 }
 
