@@ -1,15 +1,15 @@
 {% extends 'help_desk_base.html' %}
 
 {% block body_content %}
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <a class="btn btn-primary" href="{{ url_for('ShiftsView:cas_passthrough') }}">Start Session</a>
-                    <p class="card-text">To go to the student time clock page, click the "Start Session" button above to begin a new session.</p>
-                    <p class="card-text">If you are an ITS employee, the Staff and Help tabs will bring you to those respective pages. Students do not have access to these pages.</p>
-                </div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <a class="btn btn-primary" href="{{ url_for('ShiftsView:cas_passthrough') }}">Start Session</a>
+                <p class="card-text">To go to the student time clock page, click the "Start Session" button above to log out of CAS and begin a new session.</p>
+                <p class="card-text">The Staff and Help tabs are accessible only to full-time ITS employees.</p>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
