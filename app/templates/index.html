@@ -1,30 +1,15 @@
 {% extends 'help_desk_base.html' %}
 
 {% block body_content %}
-<div class="body-time-clock">
-    <form>
-        <div class="centered">
-            <h3 id="title-bar">Scan ID to Sign In or Out</h3>
-            <h3 class="alert alert-success" id="time-clock-success" style="display: none;">Scan success</h3>
-            <h3 class="alert alert-danger" id="time-clock-no-match" style="display: none;">Scan failed, user not found</h3>
-            <h3 class="alert alert-danger" id="time-clock-fail" style="display: none;">Scan failed, try again</h3>
-            <h3 class="alert alert-danger" id="resource-exhausted" style="display: none;">Error: Server Exhausted. Please wait 1 minute and try again.</h3>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <a class="btn btn-primary" href="{{ url_for('ShiftsView:cas_passthrough') }}">Start Session</a>
+                <p class="card-text">To go to the student time clock page, click the "Start Session" button above to log out of CAS and begin a new session.</p>
+                <p class="card-text">The Staff and Help tabs are accessible only to full-time ITS employees.</p>
+            </div>
         </div>
-        <div class="spinner" style="display: none;">
-            <img id="img-spinner" class="spinner-img" src="https://cdn1.bethel.edu/images/load.gif" alt="Loading"/>
-        </div>
-    </form>
-    <table id="student-attendance" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th data-toggle="tooltip" data-placement="top" title="Student Name">Name</th>
-                <th data-toggle="tooltip" data-placement="top" title="Time Signed Into Shift">Time In</th>
-                <th data-toggle="tooltip" data-placement="top" title="Time Signed Out Of Shift">Time Out</th>
-            </tr>
-        </thead>
-        <tbody id="student-tbody">
-            {% include 'shifts_table.html' %}
-        </tbody>
-    </table>
+    </div>
 </div>
 {% endblock %}
