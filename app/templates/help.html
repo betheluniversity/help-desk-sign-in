@@ -24,44 +24,46 @@
               </ul>
           <h6>What do each of the buttons do?</h6>
               <ul>
-                  <li>Process Shift Data: Runs the code to analyze the differences between the shift schedule entered by you into the 'hd_export' sheet and the scanned shifts from the student employees.</li>
+                  <li>Process Shift Data: Runs the code to analyze the differences between the shift schedule entered by you into the Service Desk Schedule sheet and the scanned shifts from the student employees.</li>
                   <li>
-                      Flagged Shifts: Opens the 'flagged_shifts' sheet within the Google Sheet for this page. The 'flagged_shifts' sheet contains the collected data of "bad" shifts after
-                      the shift processor analyzes the shifts between the 'hd_export' and 'scan_input' sheets when the "Process Shift Data" button is clicked.
+                      Flagged Shifts: Opens the Flagged Shifts sheet within the Google Sheet for this site. The Flagged Shifts sheet contains the collected data of "bad" shifts after
+                      the shift processor analyzes the shifts between the Service Desk Schedule and Scanner Data sheets when the "Process Shift Data" button is clicked.
+                      The sheet is marked as '(view only)' because it is recommended you don't edit the data in this sheet, but you have editing access if edits are necessary.
                   </li>
                   <li>
-                      Service Desk Schedule: Opens the 'hd_export' sheet, where you enter the student shift schedule you want analyzed by the shift processor.
+                      Service Desk Schedule: Opens the Service Desk Schedule sheet, where you enter the student shift schedule you want analyzed by the shift processor.
                   </li>
                   <li>
-                      Scanner Data: Opens the 'scan_input' sheet, collecting data on each shift as students scan their IDs on the RFID scanner.
+                      Scanner Data: Opens the Scanner Data sheet, collecting data on each shift as students scan their IDs on the RFID scanner.
+                      The sheet is marked as '(view only)' because it is recommended you don't edit the data in this sheet, but you have editing access if edits are necessary.
                   </li>
                   <li>
-                      Student Employees: Opens the 'hd_users' sheet, which contains the list of current student employees at the Service Desk, or any students you want signing in and out of shifts. Any student you
+                      Student Employees: Opens the Student Employees sheet, which contains the list of current student employees at the Service Desk, or any students you want signing in and out of shifts. Any student you
                       want signing in and out of shifts with the scanner must have their full name and card ID entered in this sheet.
                   </li>
               </ul>
           <h6>What do I need to do before clicking the "Process Shift Data" button?</h6>
           <ul>
               <li>
-                  The list of student employees and their corresponding user information must be up to date in the 'hd_users' sheet.
+                  The list of student employees and their corresponding user information must be up to date in the Student Employees sheet.
                   Information required for each student includes their full name and the 5-digit card ID on the back of their Bethel ID cards.
                   The card ID is upside-down on the top-middle of the card, above the magnetic strip.
               </li>
               <li>
-                  The shift schedule you want to be compared with the scanned shifts must be entered into the 'hd_export' sheet.
+                  The shift schedule you want to be compared with the scanned shifts must be entered into the Service Desk Schedule sheet.
               </li>
           </ul>
           <h6>What happens when I click the "Process Shift Data" button?</h6>
               <ul>
-                  <li>The shift processor gathers and compares shift data from the 'hd_export' and 'scan_input' sheets, recording when a "bad" shift occurs during the comparison.</li>
+                  <li>The shift processor gathers and compares shift data from the Service Desk Schedule and Scanner Data sheets, recording when a "bad" shift occurs during the comparison.</li>
                   <li>
-                      All "bad" shifts are logged into the 'flagged_shifts' sheet of the Google Sheet. Once the site gives you an alert that the program has completed,
-                      follow the "Flagged Shifts" button to open the 'flagged_shifts' sheet in a new tab.
+                      All "bad" shifts are logged into the Flagged Shifts sheet of the Google Sheet. Once the site gives you an alert that the program has completed,
+                      follow the "Flagged Shifts" button to open the Flagged Shifts sheet in a new tab.
                   </li>
                   <li>
-                      The 'flagged_shifts' sheet adds the new "bad" shifts into the existing list of shifts in the sheet, sorting all "bad" shifts by name, then by date.
-                      The 'hd_export' sheet clears following the running of the program, while the 'scan_input' sheet only clears the shifts that were analyzed by the program.
-                      The shifts cleared in 'scan_input' are those that fit in the time range of the schedule you entered into 'hd_export'.
+                      The Flagged Shifts sheet adds the new "bad" shifts into the existing list of shifts in the sheet, sorting all "bad" shifts by name, then by date.
+                      The Service Desk Schedule sheet clears following the running of the program, while the Scanner Data sheet only clears the shifts that were analyzed by the program.
+                      The shifts cleared in Scanner Data are those that fit in the time range of the schedule you entered into Service Desk Schedule.
                   </li>
               </ul>
           <h6>What does the "server exhausted" error message mean?</h6>
@@ -84,10 +86,10 @@
           <h6>How do the students clock in and out and where is the information stored?</h6>
           <p>
               Students can clock in and out of their shifts by scanning their Bethel ID cards on the RFID scanner at the Service Desk.
-              When a student clocks in or out, their card ID matches with their user info from the 'hd_users' sheet in the Google Sheet.
-              Upon matching, the timestamp is recorded as either a clock in or out and is sent to the 'scan_input' sheet as well as displayed on the home page of the site.
+              When a student clocks in or out, their card ID matches with their user info from the Student Employees sheet in the Google Sheet.
+              Upon matching, the timestamp is recorded as either a clock in or out and is sent to the Scanner Data sheet as well as displayed on the home page of the site.
               The Time Clock page displays the current day's recorded shifts from the full list of shifts.
-              All other shifts remain in the 'scan_input' sheet out of the students' view.
+              All other shifts remain in the Scanner Data sheet out of the students' view.
           </p>
       </div>
     </div>

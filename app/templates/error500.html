@@ -1,7 +1,7 @@
 {% extends 'help_desk_base.html' %}
 
 {% block body_content %}
-<h1>Server Error</h1>
-<h5>Service Desk Sign-In failed.</h5>
-<h6>This page is having trouble loading. Sorry about that! Try returning to the <a href="{{ url_for('ShiftsView:index') }}">homepage</a>.</h6>
+    <h1>Server Error</h1>
+    <p>Service Desk Sign-In failed.</p>
+    <p>This page is having trouble loading. Sorry about that! Try returning to the <a href="{{ url_for('ShiftsView:index') }}">homepage</a>.</p>
 {% endblock %}
