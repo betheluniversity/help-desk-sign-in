@@ -8,8 +8,10 @@ $(document).ready(function() {
         let input_data = {};
         $.post('/process_shifts', input_data, function(output_data) {
             $('.spinner').hide();
-            if (output_data != 'resource exhausted') {
+            if (output_data === 'shift data processing complete') {
                 $('#processing-complete').show();
+            } else if (output_data === 'index error') {
+                $('#index-error').show();
             } else {
                 $('#resource-exhausted').show();
             }
@@ -21,7 +23,7 @@ $(document).ready(function() {
     // loading GIF, the time in/out is appended to the table in shifts_table.html
     let input = "";
     $(document).on('keydown', function(key) {
-        if (key.keyCode == 13) {
+        if (key.keyCode === 13) {
             $('#time-clock-fail').hide();
             $('#resource-exhausted').hide();
             $('.spinner').show();
@@ -30,16 +32,16 @@ $(document).ready(function() {
             };
             $.post('/verify_scanner', scanned_input, function (scan_success) {
                 $('.spinner').hide();
-                if (scan_success != 'failed' && scan_success != 'resource exhausted' && scan_success != 'no match') {
+                if (scan_success !== 'failed' && scan_success !== 'resource exhausted' && scan_success !== 'no match') {
                     $('#time-clock-success').fadeTo(3000, 500).slideUp(500, function () {
                         $("#time-clock-success").slideUp(500);
                     });
                     $("#student-tbody").html(scan_success);
-                } else if (scan_success == 'no match') {
+                } else if (scan_success === 'no match') {
                     $('#time-clock-no-match').fadeTo(3000, 500).slideUp(500, function() {
                         $("#time-clock-no-match").slideUp(500);
                     });
-                } else if (scan_success == 'failed') {
+                } else if (scan_success === 'failed') {
                     $('#time-clock-fail').fadeTo(3000, 500).slideUp(500, function() {
                         $("#time-clock-fail").slideUp(500);
                     });
