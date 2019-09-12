@@ -31,6 +31,12 @@ gsheet_sd_students = spreadsheet.worksheet('Student Employees')
 
 
 class ShiftsController:
+    def refresh_credentials(self):
+        new_scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        new_credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['GS_CLIENT_SECRET'], new_scope)
+        new_client = gspread.authorize(new_credentials)
+        new_client.login()
+
     # enters clock ins and outs into Scanner Data sheet
     # card id: 5-digit ID on Bethel IDs used to identify users
     def student_time_clock(self, card_id):

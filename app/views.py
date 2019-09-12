@@ -75,6 +75,7 @@ class ShiftsView(FlaskView):
     @route('/student-signin')
     def student_signin(self):
         try:
+            self.sc.refresh_credentials()
             day_list = self.sc.day_list()
             return render_template('student_signin.html', day_list=day_list)
         except APIError:
@@ -84,6 +85,7 @@ class ShiftsView(FlaskView):
     @route('/verify_scanner', methods=['POST'])
     def verify_scanner(self):
         try:
+            self.sc.refresh_credentials()
             form = request.form
             scan = form.get("scan")
             scan_success = re.search("\[\[(.+?)\]\]", scan)
@@ -107,6 +109,7 @@ class ShiftsView(FlaskView):
     @route('/process_shifts', methods=['POST'])
     def process_shifts(self):
         try:
+            self.sc.refresh_credentials()
             self.sc.shift_processor()
             return 'shift data processing complete'
         except IndexError:
