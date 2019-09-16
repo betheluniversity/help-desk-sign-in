@@ -4,6 +4,5 @@ Flask-Classy==0.6.10
 gspread
 oauth2client
 python-ldap
-raven
 requests
 SQLAlchemy
