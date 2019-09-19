@@ -96,8 +96,9 @@ class ShiftsView(FlaskView):
                     return 'no match'
             else:
                 return 'failed'
-        except APIError:
-            return 'resource exhausted'
+        except APIError as api_error:
+            if str(api_error).find("RESOURCE_EXHAUSTED"):
+                return 'resource exhausted'
 
     @route('/staff')
     def staff_index(self):
@@ -108,8 +109,11 @@ class ShiftsView(FlaskView):
         try:
             self.sc.shift_processor()
             return 'shift data processing complete'
-        except APIError:
-            return 'resource exhausted'
+        except IndexError:
+            return 'index error'
+        except APIError as api_error:
+            if str(api_error).find("RESOURCE_EXHAUSTED"):
+                return 'resource exhausted'
 
     @route('/help')
     def help(self):

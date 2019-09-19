@@ -84,18 +84,22 @@ class ShiftsController:
     # shift_processor
     # refreshes the list of dictionaries of the Flagged Shifts sheet, allowing new shifts to append to the next row
     def flagged_shifts_list(self):
+        client.login()
         return gsheet_flagged_shifts.get_all_records()
 
     # refreshes the list of dictionaries of the Service Desk Schedule sheet, allowing the schedule to be up to date
     def sd_schedule_list(self):
+        client.login()
         return gsheet_sd_schedule.get_all_records()
 
     # refreshes the list of dictionaries of the Scanner Data sheet, allowing the total list of shifts to be up to date
     def scanner_data_list(self):
+        client.login()
         return gsheet_scanner_data.get_all_records()
 
     # refreshes the list of dictionaries of the Student Employees sheet, allowing the users page to be up to date
     def sd_students_list(self):
+        client.login()
         return gsheet_sd_students.get_all_records()
 
     # appends any existing shift from the Scanner Data sheet on the current day to a list that displays on the main page
