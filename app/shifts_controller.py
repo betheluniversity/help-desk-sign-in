@@ -6,6 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 from datetime import datetime
 from datetime import timedelta
+from flask import request
 from functools import cmp_to_key
 from operator import itemgetter as i
 
@@ -54,12 +55,13 @@ class ShiftsController:
         # len(self.scanner_data_list) + 2 is the row in the Scanner Data sheet this cell_list will append to
         # len(self.scanner_data_list) + 2 = number of shifts currently entered + 2
         # 2 = +1 for the header row in Scanner Data and +1 for a new entry into the list
-        cell_list = gsheet_scanner_data.range(len(scanner_data_list) + 2, 1, len(scanner_data_list) + 2, 4)
+        cell_list = gsheet_scanner_data.range(len(scanner_data_list) + 2, 1, len(scanner_data_list) + 2, 5)
 
         # searching through users and shifts to match card_id and determine clock in or out
         for user in sd_students_list:
             if user['Card ID'] == card_id:
                 matched = True
+                ip_address = request.environ['REMOTE_ADDR']
                 for shift in scanner_data_list:
                     # if scanner_data_list username matches sd_students_list username and the shift's clock out is
                     # empty, this is a clock out. cell_list sets the row in Scanner Data to append to as
@@ -68,7 +70,7 @@ class ShiftsController:
                     # len(scanner_data_list) is not used so the clock-out is not appended to a new row
                     if shift['Name'] == user['Name'] and shift['Out'] == '' and shift['Date'] == current_date:
                         cell_list = gsheet_scanner_data.range(scanner_data_list.index(shift) + 2, 1,
-                                                            scanner_data_list.index(shift) + 2, 4)
+                                                              scanner_data_list.index(shift) + 2, 4)
                         cell_list[3].value = current_time
                         gsheet_scanner_data.update_cells(cell_list)
                         return matched
@@ -76,6 +78,7 @@ class ShiftsController:
                 cell_list[0].value = user['Name']  # sets username
                 cell_list[1].value = current_date
                 cell_list[2].value = current_time  # sets time in as current time
+                cell_list[4].value = ip_address
                 gsheet_scanner_data.update_cells(cell_list)  # appends to Scanner Data sheet
                 break
         return matched
@@ -340,6 +343,21 @@ class ShiftsController:
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
 
+            # case: student clocks in from an IP address other than the Service Desk computer
+            if scan_shifts[scan_row]['IP Address'] != '140.88.175':
+                cause = 'Invalid IP: Did not sign in at Service Desk'
+                flag_list.append(dict(
+                    zip(flag_key, self.flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+
+                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
+                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
+                        hd_shifts[n + 1]['Employee Name']:
+                    n += 1
+                    shift_count = n
+
+                scan_row += 1
+                continue
+
             # case: student forgets to clock out (time out value is empty)
             # forgetting to clock in but then clocking out will be read by the scanner as forgetting to clock out
             if scan_shifts[scan_row]['Out'] == '' and hd_shifts[n]['Date'] == scan_shifts[scan_row]['Date']:
@@ -447,7 +465,7 @@ class ShiftsController:
         gsheet_flagged_shifts.update_cells(cell_list)
 
         # clear Scanner Data sheet data prior to re-adding unused shifts
-        self.reset_sheet_data(gsheet_scanner_data, 4)
+        self.reset_sheet_data(gsheet_scanner_data, 5)
 
         # updates cells in Scanner Data from row 2 thru the length of copy_list
         cell_list = gsheet_scanner_data.range(2, 1, len(copy_list) + 2, 4)
