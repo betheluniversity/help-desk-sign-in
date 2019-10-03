@@ -37,7 +37,8 @@ class ShiftsView(FlaskView):
             if 'ITS_view' not in session.keys():
                 get_its_view()
 
-            if ('/staff' in request.path or '/help' in request.path) and session['ITS_view'] is False:
+            if ('/staff' in request.path or '/help' in request.path) and session['ITS_view'] is False and \
+                    app.config['ENVIRON'] == 'prod':
                 abort(403)
 
         def get_user():
@@ -78,7 +79,7 @@ class ShiftsView(FlaskView):
             day_list = self.sc.day_list()
             return render_template('student_signin.html', day_list=day_list)
         except APIError:
-            # displays table of no shifts, since shift data is where the API calls occur
+            # displays table of no shifts, since day_list is where the API calls occur
             return render_template('student_signin.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
@@ -87,7 +88,7 @@ class ShiftsView(FlaskView):
             form = request.form
             scan = form.get("scan")
             scan_success = re.search("\[\[(.+?)\]\]", scan)
-            if scan_success and len(scan[2:-2]) == 5:
+            if scan_success and len(scan[2:-2]) == 5 and type(scan[2:-2]) is int:
                 card_id = int(scan[2:-2])
                 if self.sc.student_time_clock(card_id):
                     day_list = self.sc.day_list()
