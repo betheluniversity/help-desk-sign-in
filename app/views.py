@@ -88,8 +88,11 @@ class ShiftsView(FlaskView):
             form = request.form
             scan = form.get("scan")
             scan_success = re.search("\[\[(.+?)\]\]", scan)
-            if scan_success and len(scan[2:-2]) == 5 and type(scan[2:-2]) is int:
+            try:
                 card_id = int(scan[2:-2])
+            except ValueError:
+                return 'failed'
+            if scan_success and len(scan[2:-2]) == 5:
                 if self.sc.student_time_clock(card_id):
                     day_list = self.sc.day_list()
                     return render_template('shifts_table.html', day_list=day_list)

@@ -19,10 +19,13 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['GS_CL
 client = gspread.authorize(credentials)
 spreadsheet = client.open('Service Desk Sign-In Application')
 
+# TODO: uncomment and change back to the correct sheets before PR
 # individual sheets of the Service Desk Sign-In Application spreadsheet
 gsheet_flagged_shifts = spreadsheet.worksheet('Flagged Shifts (view only)')
-gsheet_scanner_data = spreadsheet.worksheet('Scanner Data (view only)')
-gsheet_sd_schedule = spreadsheet.worksheet('Service Desk Schedule')
+# gsheet_scanner_data = spreadsheet.worksheet('Scanner Data (view only)')
+gsheet_scanner_data = spreadsheet.worksheet('Test Data')
+# gsheet_sd_schedule = spreadsheet.worksheet('Service Desk Schedule')
+gsheet_sd_schedule = spreadsheet.worksheet('Test Schedule')
 gsheet_sd_students = spreadsheet.worksheet('Student Employees')
 
 
@@ -93,6 +96,12 @@ def multi_key_sort(items, columns):
     return sorted(items, key=cmp_to_key(comparer))
 
 
+def return_to_string(shift_list):
+    for shift in shift_list:
+        if not isinstance(shift['Date'], str):
+            shift['Date'] = shift['Date'].strftime('%x')  # return shift_list dates to strings
+
+
 def flagged_cells(hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
     flag_val = [hd_shifts[hd_row]['Shift ID'], hd_shifts[hd_row]['Date'],
                 convert_time_format(hd_shifts[hd_row]['Start Time'], 12),
@@ -107,9 +116,27 @@ def flagged_cells(hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
     return flag_val  # updates a row of cells in Flagged Shifts sheet with array of information on a "bad" shift
 
 
+def multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts, shift_count, flagged):
+    if cause == 'Skipped shift':
+        skipped = True
+    else:
+        skipped = False
+    flag_list.append(
+        dict(zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped))))
+    while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
+            hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
+            hd_shifts[n + 1]['Employee Name']:  # user works multiple shifts in a row
+        n += 1
+        shift_count = n
+        if flagged:
+            flag_list.append(dict(
+                zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped))))
+    return shift_count
+
+
 def prep_flag_list(cell_list, flag_list):
     for shift in flag_list:  # prep flagged shifts for posting to Flagged Shifts sheet
-        shift['Date'] = shift['Date'].strftime('%x')
+        shift['Start Time'] = convert_time_format(shift['Start Time'], 12)
         index = flag_list.index(shift)
         cell_list[index * 8].value = shift['Shift ID']
         cell_list[index * 8 + 1].value = shift['Date']
@@ -133,8 +160,6 @@ def reset_sheet_data(sheet, cols):
 # re-adds shifts to Scanner Data that were not analyzed by shift_processor method
 def prep_copy_list(cell_list, copy_list):
     for shift in copy_list:
-        if not isinstance(shift['Date'], str):
-            shift['Date'] = shift['Date'].strftime('%x')  # returns copy_list shifts to strings
         shift['In'] = convert_time_format(shift['In'], 12)
         shift['Out'] = convert_time_format(shift['Out'], 12)
         index = copy_list.index(shift)
@@ -238,9 +263,8 @@ class ShiftsController:
                          {'Shift ID': '', 'Date': '', 'Start Time': '', 'End Time': '', 'Employee Name': ''})
         scan_shifts.insert(len(scan_shifts), {'Name': '', 'Date': '', 'In': '', 'Out': ''})
 
-        for shift in scan_shifts:
-            if not isinstance(shift['Date'], str):
-                shift['Date'] = shift['Date'].strftime('%x')  # return scan_shifts dates to strings
+        return_to_string(hd_shifts)
+        return_to_string(scan_shifts)
 
         for n in range(0, len(hd_shifts)):
             # end loop once all shifts have been documented
@@ -250,8 +274,6 @@ class ShiftsController:
             if shift_count >= n:  # skips iterating over each shift of a student's consecutive shifts
                 continue
             shift_count = -1  # reset shift counter if this is the first shift of multiple consecutive shifts
-
-            hd_shifts[n]['Date'] = hd_shifts[n]['Date'].strftime('%x')  # return hd_shifts dates to strings
 
             while hd_shifts[n]['Employee Name'] != scan_shifts[scan_row]['Name'] and \
                     hd_shifts[n]['Employee Name'] != scan_shifts[scan_row - 1]['Name']:
@@ -277,41 +299,22 @@ class ShiftsController:
 
             if scan_shifts[scan_row]['IP Address'] != '140.88.175':
                 cause = 'Invalid IP: Did not sign in at Service Desk'
-                flag_list.append(dict(
-                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
-                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
-                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
-                        hd_shifts[n + 1]['Employee Name']:  # user works multiple shifts in a row
-                    n += 1
-                    shift_count = n
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count, flagged=False)
                 scan_row += 1
                 continue
 
             if scan_shifts[scan_row]['Out'] == '' and hd_shifts[n]['Date'] == scan_shifts[scan_row]['Date']:
                 cause = 'Forgot to clock in or out'
-                flag_list.append(dict(
-                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
-                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
-                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
-                        hd_shifts[n + 1]['Employee Name']:  # user works multiple shifts in a row
-                    n += 1
-                    shift_count = n
-                    flag_list.append(dict(
-                        zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count, flagged=True)
                 scan_row += 1
                 continue
 
             if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=20):
                 cause = 'Skipped shift'  # also if student forgets to clock in AND out
-                flag_list.append(
-                    dict(zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=True))))
-                while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
-                        hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
-                        hd_shifts[n + 1]['Employee Name']:  # user works multiple shifts in a row
-                    n += 1
-                    shift_count = n
-                    flag_list.append(dict(
-                        zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=True))))
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count, flagged=True)
                 continue
 
             time_out = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['Out'], '%x%H:%M')
@@ -347,13 +350,15 @@ class ShiftsController:
         list_row_length = len(flag_list) + 2
         cell_list = gsheet_flagged_shifts.range(2, 1, list_row_length, 8)
 
+        return_to_string(flag_list)
         for shift in flag_list:
-            if isinstance(shift['Date'], str):
-                shift['Date'] = datetime.strptime(shift['Date'], '%x')
+            try:
+                shift['Start Time'] = convert_time_format(shift['Start Time'], 24)
+            except TypeError:
+                pass
 
         # sorting the shifts in Flagged Shifts by name, date, and start time
         flag_list = multi_key_sort(flag_list, ['Employee Name', 'Date', 'Start Time'])
-
         prep_flag_list(cell_list, flag_list)
 
         reset_sheet_data(gsheet_flagged_shifts, 8)  # clear Flagged Shifts sheet prior to a new run-through
@@ -363,5 +368,6 @@ class ShiftsController:
         list_row_length = len(copy_list) + 2
         cell_list = gsheet_scanner_data.range(2, 1, list_row_length, 4)
 
+        return_to_string(copy_list)
         prep_copy_list(cell_list, copy_list)
         reset_sheet_data(gsheet_sd_schedule, 5)  # clears Service Desk Schedule sheet
