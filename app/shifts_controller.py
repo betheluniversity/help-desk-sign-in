@@ -19,13 +19,10 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(app.config['GS_CL
 client = gspread.authorize(credentials)
 spreadsheet = client.open('Service Desk Sign-In Application')
 
-# TODO: uncomment and change back to the correct sheets before PR
 # individual sheets of the Service Desk Sign-In Application spreadsheet
 gsheet_flagged_shifts = spreadsheet.worksheet('Flagged Shifts (view only)')
-# gsheet_scanner_data = spreadsheet.worksheet('Scanner Data (view only)')
-gsheet_scanner_data = spreadsheet.worksheet('Test Data')
-# gsheet_sd_schedule = spreadsheet.worksheet('Service Desk Schedule')
-gsheet_sd_schedule = spreadsheet.worksheet('Test Schedule')
+gsheet_scanner_data = spreadsheet.worksheet('Scanner Data (view only)')
+gsheet_sd_schedule = spreadsheet.worksheet('Service Desk Schedule')
 gsheet_sd_students = spreadsheet.worksheet('Student Employees')
 
 
