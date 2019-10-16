@@ -2,6 +2,7 @@ import logging
 
 # Packages
 from flask import Flask
+
 import sentry_sdk
 
 app = Flask(__name__)
