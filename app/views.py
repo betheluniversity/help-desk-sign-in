@@ -66,7 +66,7 @@ class ShiftsView(FlaskView):
             except:
                 session['ITS_view'] = False
 
-        if '/staff' in request.path or '/help' in request.path:
+        if '/staff' in request.path or '/help' in request.path:  # check user if on these pages
             init_user()
 
     @route('/')
