@@ -37,8 +37,7 @@ class ShiftsView(FlaskView):
             if 'ITS_view' not in session.keys():
                 get_its_view()
 
-            if ('/staff' in request.path or '/help' in request.path) and session['ITS_view'] is False and \
-                    app.config['ENVIRON'] == 'prod':
+            if session['ITS_view'] is False and app.config['ENVIRON'] == 'prod':
                 abort(403)
 
         def get_user():
@@ -67,7 +66,8 @@ class ShiftsView(FlaskView):
             except:
                 session['ITS_view'] = False
 
-        init_user()
+        if '/staff' in request.path or '/help' in request.path:
+            init_user()
 
     @route('/')
     def index(self):
