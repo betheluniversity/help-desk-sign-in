@@ -103,7 +103,7 @@ def flagged_cells(hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
     flag_val = [hd_shifts[hd_row]['Shift ID'], hd_shifts[hd_row]['Date'],
                 convert_time_format(hd_shifts[hd_row]['Start Time'], 12),
                 convert_time_format(hd_shifts[hd_row]['End Time'], 12), hd_shifts[hd_row]['Employee Name']]
-    if skipped:
+    if skipped:  # append empty strings so next shift's in and out are not appended
         flag_val.append('')
         flag_val.append('')
     else:
@@ -294,7 +294,7 @@ class ShiftsController:
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
 
-            if scan_shifts[scan_row]['IP Address'] != '140.88.175':
+            if scan_shifts[scan_row]['IP Address'] != '140.88.175.144':
                 cause = 'Invalid IP: Did not sign in at Service Desk'
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
                                               shift_count, flagged=False)
