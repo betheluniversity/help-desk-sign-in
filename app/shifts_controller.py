@@ -160,10 +160,11 @@ def prep_copy_list(cell_list, copy_list):
         shift['In'] = convert_time_format(shift['In'], 12)
         shift['Out'] = convert_time_format(shift['Out'], 12)
         index = copy_list.index(shift)
-        cell_list[index * 4].value = shift['Name']
-        cell_list[index * 4 + 1].value = shift['Date']
-        cell_list[index * 4 + 2].value = shift['In']
-        cell_list[index * 4 + 3].value = shift['Out']
+        cell_list[index * 5].value = shift['Name']
+        cell_list[index * 5 + 1].value = shift['Date']
+        cell_list[index * 5 + 2].value = shift['In']
+        cell_list[index * 5 + 3].value = shift['Out']
+        cell_list[index * 5 + 4].value = shift['IP Address']
     gsheet_scanner_data.update_cells(cell_list)  # appends to Scanner Data sheet
 
 
@@ -363,7 +364,7 @@ class ShiftsController:
         reset_sheet_data(gsheet_scanner_data, 5)  # clear Scanner Data sheet data prior to re-adding unused shifts
 
         list_row_length = len(copy_list) + 2
-        cell_list = gsheet_scanner_data.range(2, 1, list_row_length, 4)
+        cell_list = gsheet_scanner_data.range(2, 1, list_row_length, 5)
 
         return_to_string(copy_list)
         prep_copy_list(cell_list, copy_list)
