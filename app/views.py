@@ -31,14 +31,12 @@ class ShiftsView(FlaskView):
                 seconds_in_12_hours = 60 * 60 * 12
                 session['session_time'] = time.time() + seconds_in_12_hours
 
-            if 'username' not in session.keys() or ('/staff' in request.path or '/help' in request.path):
+            if '/staff' in request.path or '/help' in request.path:
                 get_user()
-
-            if 'ITS_view' not in session.keys():
                 get_its_view()
 
-            if session['ITS_view'] is False and ('/staff' in request.path or '/help' in request.path):
-                abort(403)
+                if session['ITS_view'] is False:
+                    abort(403)
 
         def get_user():
             if app.config['ENVIRON'] == 'prod':
