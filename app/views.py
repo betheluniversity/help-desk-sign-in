@@ -31,15 +31,13 @@ class ShiftsView(FlaskView):
                 seconds_in_12_hours = 60 * 60 * 12
                 session['session_time'] = time.time() + seconds_in_12_hours
 
-            if 'username' not in session.keys():
+            # if accessing staff-only pages, then get username and check if user has ITS - Employee role in IAM
+            if '/staff' in request.path or '/help' in request.path:
                 get_user()
-
-            if 'ITS_view' not in session.keys():
                 get_its_view()
 
-            if ('/staff' in request.path or '/help' in request.path) and session['ITS_view'] is False and \
-                    app.config['ENVIRON'] == 'prod':
-                abort(403)
+                if session['ITS_view'] is False:  # after checking ITS_view, if not staff, then abort
+                    abort(403)
 
         def get_user():
             if app.config['ENVIRON'] == 'prod':

@@ -103,7 +103,7 @@ def flagged_cells(hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
     flag_val = [hd_shifts[hd_row]['Shift ID'], hd_shifts[hd_row]['Date'],
                 convert_time_format(hd_shifts[hd_row]['Start Time'], 12),
                 convert_time_format(hd_shifts[hd_row]['End Time'], 12), hd_shifts[hd_row]['Employee Name']]
-    if skipped:
+    if skipped:  # append empty strings so next shift's in and out are not appended
         flag_val.append('')
         flag_val.append('')
     else:
@@ -160,10 +160,11 @@ def prep_copy_list(cell_list, copy_list):
         shift['In'] = convert_time_format(shift['In'], 12)
         shift['Out'] = convert_time_format(shift['Out'], 12)
         index = copy_list.index(shift)
-        cell_list[index * 4].value = shift['Name']
-        cell_list[index * 4 + 1].value = shift['Date']
-        cell_list[index * 4 + 2].value = shift['In']
-        cell_list[index * 4 + 3].value = shift['Out']
+        cell_list[index * 5].value = shift['Name']
+        cell_list[index * 5 + 1].value = shift['Date']
+        cell_list[index * 5 + 2].value = shift['In']
+        cell_list[index * 5 + 3].value = shift['Out']
+        cell_list[index * 5 + 4].value = shift['IP Address']
     gsheet_scanner_data.update_cells(cell_list)  # appends to Scanner Data sheet
 
 
@@ -294,7 +295,7 @@ class ShiftsController:
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
 
-            if scan_shifts[scan_row]['IP Address'] != '140.88.175':
+            if scan_shifts[scan_row]['IP Address'] != '140.88.175.144':
                 cause = 'Invalid IP: Did not sign in at Service Desk'
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
                                               shift_count, flagged=False)
@@ -363,7 +364,7 @@ class ShiftsController:
         reset_sheet_data(gsheet_scanner_data, 5)  # clear Scanner Data sheet data prior to re-adding unused shifts
 
         list_row_length = len(copy_list) + 2
-        cell_list = gsheet_scanner_data.range(2, 1, list_row_length, 4)
+        cell_list = gsheet_scanner_data.range(2, 1, list_row_length, 5)
 
         return_to_string(copy_list)
         prep_copy_list(cell_list, copy_list)
