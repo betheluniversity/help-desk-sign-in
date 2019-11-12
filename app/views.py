@@ -31,7 +31,7 @@ class ShiftsView(FlaskView):
                 seconds_in_12_hours = 60 * 60 * 12
                 session['session_time'] = time.time() + seconds_in_12_hours
 
-            if 'username' not in session.keys():
+            if 'username' not in session.keys() or ('/staff' in request.path or '/help' in request.path):
                 get_user()
 
             if 'ITS_view' not in session.keys():
