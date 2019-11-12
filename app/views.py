@@ -70,10 +70,6 @@ class ShiftsView(FlaskView):
     def index(self):
         return render_template('index.html', **locals())
 
-    @route('/test')
-    def test(self):
-        return str(session['username'])
-
     @route('/student-signin')
     def student_signin(self):
         try:
