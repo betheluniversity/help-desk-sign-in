@@ -4,8 +4,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 # Packages
 import datetime
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask import request
 from functools import cmp_to_key
 from operator import itemgetter as i
@@ -247,9 +246,9 @@ class ShiftsController:
                      datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M') <= latest_shift + timedelta(minutes=30)]
 
         # removing shifts from scan_shifts not within the date range of earliest through latest shift in hd_shifts
-        scan_shifts = [shift for shift in scan_shifts if earliest_shift - timedelta(minutes=30) <=
+        scan_shifts = [shift for shift in scan_shifts if earliest_shift - timedelta(hours=1) <=
                        datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M') <=
-                       latest_shift + timedelta(minutes=30)]
+                       latest_shift + timedelta(hours=1)]
 
         prep_scan_shifts(earliest_shift, latest_shift, lower_bound, scan_shifts, upper_bound)
 
@@ -277,21 +276,18 @@ class ShiftsController:
                     hd_shifts[n]['Employee Name'] != scan_shifts[scan_row - 1]['Name']:
                 scan_row += 1
 
-            # if scanned shift clock occurs 15+ minutes before the earliest shift time, ignore and continue
-            while datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['In'], '%x%H:%M') < \
-                    earliest_shift - timedelta(minutes=15):
-                scan_row += 1
-                continue
-
             time_in = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['In'], '%x%H:%M')
             start_time = datetime.strptime(hd_shifts[n]['Date'] + hd_shifts[n]['Start Time'], '%x%H:%M')
             end_time = datetime.strptime(hd_shifts[n]['Date'] + hd_shifts[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
-            # if student clocks in when they were not scheduled for a shift at that time
+            # if clock-in not w/in 1 hour of the scheduled start, student clocked in when not scheduled
             if not start_time - timedelta(hours=1) <= time_in <= start_time + timedelta(hours=1):
-                while start_time > time_in and hd_shifts[n]['Employee Name'] == scan_shifts[scan_row]['Name']:
+                # while clock-in is more than 1 hour before scheduled start, check next shift until loop breaks
+                while start_time - timedelta(hours=1) > time_in and hd_shifts[n]['Employee Name'] == \
+                        scan_shifts[scan_row]['Name']:
                     scan_row += 1
+                    # ignore current shift and set time_in to next shift's time in
                     time_in = datetime.strptime(scan_shifts[scan_row]['Date'] +
                                                 scan_shifts[scan_row]['In'], '%x%H:%M')
 
@@ -309,7 +305,7 @@ class ShiftsController:
                 scan_row += 1
                 continue
 
-            if not start_time - timedelta(minutes=10) <= time_in <= start_time + timedelta(minutes=20):
+            if not start_time - timedelta(hours=1) <= time_in <= start_time + timedelta(hours=1):
                 cause = 'Skipped shift'  # also if student forgets to clock in AND out
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
                                               shift_count, flagged=True)
@@ -328,18 +324,30 @@ class ShiftsController:
                 actual_duration = time_out - time_in
                 shift_count = n
 
-            if time_in > start_time + timedelta(minutes=8) or \
-                    actual_duration < set_duration - timedelta(minutes=8):
-                # if student is late
-                if time_in > start_time + timedelta(minutes=8):
-                    cause = 'Late'
-                    flag_list.append(dict(
-                        zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
-                # if student leaves early and/or has shorter shift than scheduled
-                else:
-                    cause = 'Short shift'
-                    flag_list.append(dict(
-                        zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+            # student forgets to sign out and signs in later in the day, clock in is not clock out of old shift
+            if end_time + timedelta(hours=1) < time_out and \
+                    scan_shifts[scan_row]['Date'] == scan_shifts[scan_row + 1]['Date']:
+                cause = 'Forgot to clock in or out'
+                scan_shifts[scan_row + 1]['Out'] = scan_shifts[scan_row + 1]['In']
+                scan_shifts[scan_row + 1]['In'] = scan_shifts[scan_row]['Out']
+                scan_shifts[scan_row]['Out'] = ''
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count, flagged=True)
+                scan_row += 1
+                continue
+
+            if time_in > start_time + timedelta(minutes=8):
+                cause = 'Late'
+                flag_list.append(dict(
+                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+                scan_row += 1
+                continue
+
+            if actual_duration < set_duration - timedelta(minutes=8):
+                cause = 'Short shift'
+                flag_list.append(dict(
+                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+
             scan_row += 1
 
         for shift in flag_shifts:
