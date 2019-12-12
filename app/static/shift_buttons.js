@@ -22,32 +22,14 @@ $(document).ready(function() {
     // method in shifts_controller.py, where it logs the time in/out and returns from views.py as a POST. Along with a
     // loading GIF, the time in/out is appended to the table in shifts_table.html
     let input = "";
-    $(document).on('keydown', function(key) {
+    $(document).on('keydown', function (key) {
         if (key.keyCode === 13) {
-            $('#time-clock-fail').hide();
-            $('#resource-exhausted').hide();
             $('.spinner').show();
             let scanned_input = {
                 'scan': input
             };
-            $.post('/verify_scanner', scanned_input, function (scan_success) {
+            $.post('/verify_scanner', scanned_input, function (data) {
                 $('.spinner').hide();
-                if (scan_success !== 'failed' && scan_success !== 'resource exhausted' && scan_success !== 'no match') {
-                    $('#time-clock-success').fadeTo(3000, 500).slideUp(500, function () {
-                        $("#time-clock-success").slideUp(500);
-                    });
-                    $("#student-tbody").html(scan_success);
-                } else if (scan_success === 'no match') {
-                    $('#time-clock-no-match').fadeTo(3000, 500).slideUp(500, function() {
-                        $("#time-clock-no-match").slideUp(500);
-                    });
-                } else if (scan_success === 'failed') {
-                    $('#time-clock-fail').fadeTo(3000, 500).slideUp(500, function() {
-                        $("#time-clock-fail").slideUp(500);
-                    });
-                } else {
-                    $('#resource-exhausted').show();
-                }
                 input = "";
             });
         } else {

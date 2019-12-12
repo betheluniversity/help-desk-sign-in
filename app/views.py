@@ -67,6 +67,9 @@ class ShiftsView(FlaskView):
 
         init_user()
 
+        if 'alert' not in session.keys():
+            session['alert'] = []
+
     @route('/')
     def index(self):
         return render_template('index.html', **locals())
@@ -89,18 +92,23 @@ class ShiftsView(FlaskView):
             try:
                 card_id = int(scan[2:-2])
             except ValueError:
-                return 'failed'
+                self.sc.set_alert('danger', 'Scan failed, try again')
+                return
             if scan_success and len(scan[2:-2]) == 5:
                 if self.sc.student_time_clock(card_id):
                     day_list = self.sc.day_list()
+                    self.sc.set_alert('success', 'Scan success')
                     return render_template('shifts_table.html', day_list=day_list)
                 else:
-                    return 'no match'
+                    self.sc.set_alert('danger', 'Scan failed, user not found')
+                    return
             else:
-                return 'failed'
+                self.sc.set_alert('danger', 'Scan failed, try again')
+                return
         except APIError as api_error:
             if str(api_error).find("RESOURCE_EXHAUSTED"):
-                return 'resource exhausted'
+                self.sc.set_alert('danger', 'Error: Server exhausted, please wait 1 minute and try again')
+                return
 
     @route('/staff')
     def staff_index(self):
@@ -110,12 +118,15 @@ class ShiftsView(FlaskView):
     def process_shifts(self):
         try:
             self.sc.shift_processor()
-            return 'shift data processing complete'
+            self.sc.set_alert('success', 'Shift data processing complete')
+            return
         except IndexError:
-            return 'index error'
+            self.sc.set_alert('success', 'Error: Data mismatch between Service Desk Schedule and Scanner Data')
+            return
         except APIError as api_error:
             if str(api_error).find("RESOURCE_EXHAUSTED"):
-                return 'resource exhausted'
+                self.sc.set_alert('danger', 'Error: Server exhausted, please wait 1 minute and try again')
+                return
 
     @route('/help')
     def help(self):

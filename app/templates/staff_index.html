@@ -9,6 +9,19 @@
           <input type="button" class="btn btn-success" id="process-shifts" value="Process Shift Data">
           <p class="card-text">Run the shift processor, which analyzes shifts between the Scanner Data and the Service Desk Schedule and posts the "bad" shifts to Flagged Shifts.</p>
         </div>
+
+        {# SHOWS ALERTS #}
+        {% if alert %}
+          {% for a in alert %}
+            <div class="alert alert-{{ a.type }} alert-dismissible fade show" role="alert">
+              {{ a.message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
         <div class="alert alert-success alert-dismissible" id="processing-complete" style="display: none;">
           <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times</button>
           <h6>Shift data processing complete.</h6>
