@@ -5,28 +5,13 @@
     <form>
         <div class="centered">
             <h3 id="title-bar">Scan ID to Sign In or Out</h3>
-            {# SHOWS ALERTS #}
-            {% if alert %}
-              {% for a in alert %}
-                <h3 class="alert alert-{{ a.type }}">{{ a.message }}</h3>
-              {% endfor %}
-            {% endif %}
         </div>
         <div class="spinner" style="display: none;">
             <img id="img-spinner" class="spinner-img" src="https://cdn1.bethel.edu/images/load.gif" alt="Loading"/>
         </div>
     </form>
-    <table id="student-attendance" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th data-toggle="tooltip" data-placement="top" title="Student Name">Name</th>
-                <th data-toggle="tooltip" data-placement="top" title="Time Signed Into Shift">Time In</th>
-                <th data-toggle="tooltip" data-placement="top" title="Time Signed Out Of Shift">Time Out</th>
-            </tr>
-        </thead>
-        <tbody id="student-tbody">
-            {% include 'shifts_table.html' %}
-        </tbody>
-    </table>
+    <div id="table-refresh">
+        {% include 'shifts_table.html' %}
+    </div>
 </div>
 {% endblock %}

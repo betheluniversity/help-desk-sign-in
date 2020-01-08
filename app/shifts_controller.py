@@ -5,7 +5,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Packages
 import datetime
 from datetime import datetime, timedelta
-from flask import request, session
+from flask import request
 from functools import cmp_to_key
 from operator import itemgetter as i
 
@@ -168,22 +168,6 @@ def prep_copy_list(cell_list, copy_list):
 
 
 class ShiftsController:
-    # sets alert for when one is needed next
-    def set_alert(self, message_type, message):
-        session['alert'].append({
-          'type': message_type,
-          'message': message
-        })
-        session.modified = True
-
-    # gets current alert (if there is one) and then resets alert to nothing
-    def get_alert(self):
-        if 'alert' in session.keys():
-            session['alert'] = []
-        alert_return = session['alert']
-        session['alert'] = []
-        return alert_return
-
     def student_time_clock(self, card_id):
         current_time = datetime.now().strftime('%-I:%M %p')
         current_date = datetime.now().strftime('%x')
