@@ -77,7 +77,7 @@ class ShiftsView(FlaskView):
             day_list = self.sc.day_list()
             return render_template('student_signin.html', day_list=day_list)
         except APIError:
-            # displays table of no shifts, since day_list is where the API calls occur
+            # does not display table of shifts since day_list is where the API calls for shift data occur
             return render_template('student_signin.html', **locals())
 
     @route('/verify_scanner', methods=['POST'])
@@ -86,21 +86,25 @@ class ShiftsView(FlaskView):
             form = request.form
             scan = form.get("scan")
             scan_success = re.search("\[\[(.+?)\]\]", scan)
+            day_list = self.sc.day_list()
+            alert_type = 'danger'
+            alert_message = 'Scan failed, please try again'
             try:
                 card_id = int(scan[2:-2])
             except ValueError:
-                return 'failed'
+                return render_template('shifts_table.html', **locals())
             if scan_success and len(scan[2:-2]) == 5:
+                alert_message = 'Scan failed, user not found'
                 if self.sc.student_time_clock(card_id):
                     day_list = self.sc.day_list()
-                    return render_template('shifts_table.html', day_list=day_list)
-                else:
-                    return 'no match'
-            else:
-                return 'failed'
+                    alert_type = 'success'
+                    alert_message = 'Scan successful'
+            return render_template('shifts_table.html', **locals())
         except APIError as api_error:
+            alert_type = 'danger'
+            alert_message = 'Error: Server exhausted, please wait 1 minute and try again'
             if str(api_error).find("RESOURCE_EXHAUSTED"):
-                return 'resource exhausted'
+                return render_template('shifts_table.html', **locals())
 
     @route('/staff')
     def staff_index(self):
@@ -110,12 +114,18 @@ class ShiftsView(FlaskView):
     def process_shifts(self):
         try:
             self.sc.shift_processor()
-            return 'shift data processing complete'
+            alert_type = 'success'
+            alert_message = 'Shift data processing complete'
+            return render_template('shift_alert.html', **locals())
         except IndexError:
-            return 'index error'
+            alert_type = 'warning'
+            alert_message = 'Error: Data mismatch between Service Desk Schedule and Scanner Data'
+            return render_template('shift_alert.html', **locals())
         except APIError as api_error:
+            alert_type = 'danger'
+            alert_message = 'Error: Server exhausted, please wait 1 minute and try again'
             if str(api_error).find("RESOURCE_EXHAUSTED"):
-                return 'resource exhausted'
+                return render_template('shift_alert.html', **locals())
 
     @route('/help')
     def help(self):
