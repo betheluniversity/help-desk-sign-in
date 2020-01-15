@@ -272,8 +272,8 @@ class ShiftsController:
                 continue
             shift_count = -1  # reset shift counter if this is the first shift of multiple consecutive shifts
 
-            while hd_shifts[n]['Employee Name'] != scan_shifts[scan_row]['Name'] and \
-                    hd_shifts[n]['Employee Name'] != scan_shifts[scan_row - 1]['Name']:
+            while scan_shifts[scan_row]['Name'] not in hd_shifts[n]['Employee Name'] and \
+                    scan_shifts[scan_row - 1]['Name'] not in hd_shifts[n]['Employee Name']:
                 scan_row += 1
 
             time_in = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['In'], '%x%H:%M')
