@@ -305,7 +305,7 @@ class ShiftsController:
                 scan_row += 1
                 continue
 
-            if not start_time - timedelta(hours=1) <= time_in <= start_time + timedelta(hours=1):
+            if not start_time - timedelta(hours=1.5) <= time_in <= start_time + timedelta(hours=1.5):
                 cause = 'Skipped shift'  # also if student forgets to clock in AND out
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
                                               shift_count, flagged=True)
@@ -328,7 +328,11 @@ class ShiftsController:
             if end_time + timedelta(hours=1) < time_out and \
                     scan_shifts[scan_row]['Date'] == scan_shifts[scan_row + 1]['Date']:
                 cause = 'Forgot to clock in or out'
-                scan_shifts[scan_row + 1]['Out'] = scan_shifts[scan_row + 1]['In']
+                next_in = datetime.strptime(scan_shifts[scan_row + 1]['Date'] +
+                                            scan_shifts[scan_row + 1]['In'], '%x%H:%M')
+                if next_in - time_out >= timedelta(minutes=10):
+                    # only replace next shift's out if next in isn't w/in 10 min of current shift's out
+                    scan_shifts[scan_row + 1]['Out'] = scan_shifts[scan_row + 1]['In']
                 scan_shifts[scan_row + 1]['In'] = scan_shifts[scan_row]['Out']
                 scan_shifts[scan_row]['Out'] = ''
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
