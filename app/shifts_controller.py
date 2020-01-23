@@ -112,21 +112,23 @@ def flagged_cells(hd_shifts, scan_shifts, hd_row, scan_row, reason, skipped):
     return flag_val  # updates a row of cells in Flagged Shifts sheet with array of information on a "bad" shift
 
 
-def multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts, shift_count, flagged):
+def multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts, shift_count):
     if cause == 'Skipped shift':
         skipped = True
     else:
         skipped = False
-    flag_list.append(
-        dict(zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped))))
+
+    original_n = n  # remembering value of n, so as to set n back to this value after the while loop
     while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
             hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
             hd_shifts[n + 1]['Employee Name']:  # user works multiple shifts in a row
         n += 1
         shift_count = n
-        if flagged:
-            flag_list.append(dict(
-                zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped))))
+    hd_shifts[original_n]['End Time'] = hd_shifts[n]['End Time']  # end time to last shift's end time in loop
+    n = original_n
+
+    flag_list.append(dict(
+        zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped))))
     return shift_count
 
 
@@ -216,9 +218,11 @@ class ShiftsController:
         hd_shifts = refresh_shifts(gsheet_sd_schedule)
 
         scan_row = 0  # tracks the correct row number for scanner time in and out
+        last_shift = 0  # tracks the last shift to be analyzed successfully
         shift_count = -1  # tracks the current part of the extra shift(s)
         lower_bound = -1
         upper_bound = -1
+        name_present = 0  # set to 0, this means the student's name in hd_shift is present within the scan_shift data
 
         # creates keys for the list of dictionaries titled 'flag_list'
         flag_key = ['Shift ID', 'Date', 'Start Time', 'End Time', 'Employee Name', 'In', 'Out', 'Issue']
@@ -274,16 +278,26 @@ class ShiftsController:
 
             while scan_shifts[scan_row]['Name'] not in hd_shifts[n]['Employee Name'] and \
                     scan_shifts[scan_row - 1]['Name'] not in hd_shifts[n]['Employee Name']:
+                if scan_shifts[scan_row + 1]['Name'] == '' and name_present == 1:
+                    scan_row = last_shift + 1
+                    name_present = 2  # setting to 2 indicates the next shift is empty, the list of scan shifts is done
+                    break
+                name_present = 1  # setting to 1 indicates that the condition of the while loop has been met
                 scan_row += 1
 
+            if name_present == 2:  # if the list of students is done, skip the hd_shift that caused the issue
+                name_present = 0
+                continue
+
+            last_shift = scan_row
             time_in = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['In'], '%x%H:%M')
             start_time = datetime.strptime(hd_shifts[n]['Date'] + hd_shifts[n]['Start Time'], '%x%H:%M')
             end_time = datetime.strptime(hd_shifts[n]['Date'] + hd_shifts[n]['End Time'], '%x%H:%M')
             set_duration = end_time - start_time
 
-            # if clock-in not w/in 1 hour of the scheduled start, student clocked in when not scheduled
-            if not start_time - timedelta(hours=1) <= time_in <= start_time + timedelta(hours=1):
-                # while clock-in is more than 1 hour before scheduled start, check next shift until loop breaks
+            # if clock-in not w/in 1.5 hours of the scheduled start, student clocked in when not scheduled
+            if not start_time - timedelta(hours=1.5) <= time_in <= start_time + timedelta(hours=1.5):
+                # while clock-in is more than 1.5 hours before scheduled start, check next shift until loop breaks
                 while start_time - timedelta(hours=1) > time_in and hd_shifts[n]['Employee Name'] == \
                         scan_shifts[scan_row]['Name']:
                     scan_row += 1
@@ -294,27 +308,29 @@ class ShiftsController:
             if scan_shifts[scan_row]['IP Address'] != '140.88.175.144':
                 cause = 'Invalid IP: Did not sign in at Service Desk'
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
-                                              shift_count, flagged=False)
+                                              shift_count)
                 scan_row += 1
                 continue
 
-            if scan_shifts[scan_row]['Out'] == '' and hd_shifts[n]['Date'] == scan_shifts[scan_row]['Date']:
+            if scan_shifts[scan_row]['Out'] == '' and hd_shifts[n]['Date'] == scan_shifts[scan_row]['Date'] or \
+                    end_time - timedelta(minutes=15) <= time_in <= end_time + timedelta(minutes=15):
                 cause = 'Forgot to clock in or out'
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
-                                              shift_count, flagged=True)
+                                              shift_count)
                 scan_row += 1
                 continue
 
             if not start_time - timedelta(hours=1.5) <= time_in <= start_time + timedelta(hours=1.5):
                 cause = 'Skipped shift'  # also if student forgets to clock in AND out
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
-                                              shift_count, flagged=True)
+                                              shift_count)
                 continue
 
             time_out = datetime.strptime(scan_shifts[scan_row]['Date'] + scan_shifts[scan_row]['Out'], '%x%H:%M')
             actual_duration = time_out - time_in
 
             # if student works multiple shifts in a row
+            original_n = n  # remembering value of n, so as to set n back to this value after the while loop
             while hd_shifts[n]['Date'] == hd_shifts[n + 1]['Date'] and hd_shifts[n]['End Time'] == \
                     hd_shifts[n + 1]['Start Time'] and hd_shifts[n]['Employee Name'] == \
                     hd_shifts[n + 1]['Employee Name']:
@@ -323,6 +339,7 @@ class ShiftsController:
                 set_duration = end_time - start_time
                 actual_duration = time_out - time_in
                 shift_count = n
+            n = original_n
 
             # student forgets to sign out and signs in later in the day, clock in is not clock out of old shift
             if end_time + timedelta(hours=1) < time_out and \
@@ -336,22 +353,21 @@ class ShiftsController:
                 scan_shifts[scan_row + 1]['In'] = scan_shifts[scan_row]['Out']
                 scan_shifts[scan_row]['Out'] = ''
                 shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
-                                              shift_count, flagged=True)
+                                              shift_count)
                 scan_row += 1
                 continue
 
             if time_in > start_time + timedelta(minutes=8):
                 cause = 'Late'
-                flag_list.append(dict(
-                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count)
                 scan_row += 1
                 continue
 
             if actual_duration < set_duration - timedelta(minutes=8):
                 cause = 'Short shift'
-                flag_list.append(dict(
-                    zip(flag_key, flagged_cells(hd_shifts, scan_shifts, n, scan_row, cause, skipped=False))))
-
+                shift_count = multiple_shifts(cause, flag_key, flag_list, hd_shifts, n, scan_row, scan_shifts,
+                                              shift_count)
             scan_row += 1
 
         for shift in flag_shifts:
