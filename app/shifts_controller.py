@@ -57,17 +57,6 @@ def prep_hd_shifts(earliest_shift, hd_shifts, latest_shift):
     return earliest_shift, latest_shift
 
 
-def prep_scan_shifts(earliest_shift, latest_shift, lower_bound, scan_shifts, upper_bound):
-    for shift in scan_shifts:
-        this_shift = datetime.strptime(shift['Date'] + shift['In'], '%x%H:%M')
-        shift['Date'] = datetime.strptime(shift['Date'], '%x')
-        if earliest_shift - timedelta(minutes=30) <= this_shift <= latest_shift + timedelta(minutes=30):
-            if lower_bound < 0:  # sets lower bound to this shift
-                lower_bound = scan_shifts.index(shift)
-            while upper_bound < scan_shifts.index(shift):  # sets upper bound to this shift
-                upper_bound = scan_shifts.index(shift)
-
-
 # compares keys in a list of dictionaries to sort in ascending or descending order
 # items: the list of dictionaries; columns: the keys being sorted, in order of desired sort
 # found at https://tinyurl.com/y2m6wuzr
@@ -218,8 +207,6 @@ class ShiftsController:
         scan_row = 0  # tracks the correct row number for scanner time in and out
         last_shift = 0  # tracks the last shift to be analyzed successfully
         shift_count = -1  # tracks the current part of the extra shift(s)
-        lower_bound = -1
-        upper_bound = -1
         student_name_match = 'match successful'  # indicates student's name is present within hd_shifts & scan_shifts
 
         # creates keys for the list of dictionaries titled 'flag_list'
@@ -247,8 +234,6 @@ class ShiftsController:
         # removing shifts from scan_shifts not within the date range of earliest through latest shift in hd_shifts
         scan_shifts = [shift for shift in scan_shifts if earliest_shift <= datetime.strptime(shift['Date'], '%x') <=
                        latest_shift]
-
-        prep_scan_shifts(earliest_shift, latest_shift, lower_bound, scan_shifts, upper_bound)
 
         hd_shifts = multi_key_sort(hd_shifts, ['Employee Name', 'Date', 'Start Time'])
         scan_shifts = multi_key_sort(scan_shifts, ['Name', 'Date', 'In'])
